@@ -21,7 +21,7 @@ Update `pip` and install the required dependencies:
 Start the Flask server:
 
 ```shell
-(venv) $ python main.py
+(venv) $ python application.py
  * Serving Flask app "main" (lazy loading)
  * Environment: production
    WARNING: This is a development server. Do not use it in a production deployment.
