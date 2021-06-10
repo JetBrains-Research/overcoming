@@ -1,27 +1,32 @@
 from flask import Flask
-from flask import request, escape
+from flask import request
+from flask import escape
 from flask import render_template
-import pickle
 import sqlite3
 
-con = sqlite3.connect('example.db')
-
+con = sqlite3.connect('form_data.db')
 app = Flask(__name__, template_folder='templates')
-connection = 'example.db'
+connection = 'form_data.db'
+task_list = ["""Дано: print(something, type(something)). <br> Сравните типы объектов.""",
+             """Дан список: names = ["a", "b", "c"]. <br> Проитерируйте объекты в нем и выведите значение элемента и 
+             его порядковый номер в списке.""",
+             """Дан список: list = ['a','b','c','d']. <br> Просуммируйте значения в нем."""]
+
 
 def create_db(connection):
     con = sqlite3.connect(connection)
     cur = con.cursor()
     cur.execute('''CREATE TABLE form_data
-                   (Name text, City text, Country text)''')
+                   (answer text)''')
     con.commit()
     con.close()
 
+#create_db(connection)
 
-def write_to_database(new_from_data, connection):
+def write_to_database(new_form_data, connection):
     con = sqlite3.connect(connection)
     cur = con.cursor()
-    cur.execute(f"INSERT INTO form_data VALUES ({new_from_data['Name'], new_from_data['City'], new_from_data['Country']})")
+    cur.execute(f"INSERT INTO form_data VALUES ({new_form_data['answer']})")
     con.close()
 
 
@@ -32,41 +37,37 @@ def test_database(connection):
         print(row)
     con.close()
 
-#create_db(connection)
+
+
 @app.route('/form')
 def form():
 
     return render_template('form.html')
 
 
-@app.route('/data/', methods=['POST', 'GET'])
+@app.route('/data', methods=['POST', 'GET'])
 def data():
     if request.method == 'GET':
         return f"The URL /data is accessed directly. Try going to '/form' to submit form"
     if request.method == 'POST':
-        print(request)
         form_data = request.form
         write_to_database(form_data, connection)
-        test_database(connection)
         return f"thank you for participation!"
-        #return render_template('data.html', form_data=form_data)
 
 
 def create_db(connection):
     con = sqlite3.connect(connection)
     cur = con.cursor()
     cur.execute('''CREATE TABLE form_data
-                   (Name text, City text, Country text)''')
+                   (answer text)''')
     con.commit()
     con.close()
 
 
-def write_to_database(new_from_data, connection):
+def write_to_database(new_form_data, connection):
     con = sqlite3.connect(connection)
     cur = con.cursor()
-    print(f"INSERT INTO form_data VALUES ({new_from_data['Name']}, {new_from_data['City']}, {new_from_data['Country']})")
-    cur.execute(f"INSERT INTO form_data VALUES ({new_from_data['Name']}, {new_from_data['City']}, {new_from_data['Country']})")
-    con.commit()
+    cur.execute(f"INSERT INTO form_data VALUES ({new_form_data['answer']})")
     con.close()
 
 
@@ -76,7 +77,6 @@ def test_database(connection):
     for row in cur.execute('SELECT * FROM form_data'):
         print(row)
     con.close()
-
 
 if __name__ == "__main__":
 
