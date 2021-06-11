@@ -23,22 +23,6 @@ def create_db(connection):
 
 #create_db(connection)
 
-def write_to_database(new_form_data, connection):
-    con = sqlite3.connect(connection)
-    cur = con.cursor()
-    cur.execute(f"INSERT INTO form_data VALUES ({new_form_data['answer']})")
-    con.close()
-
-
-def test_database(connection):
-    con = sqlite3.connect(connection)
-    cur = con.cursor()
-    for row in cur.execute('SELECT * FROM form_data'):
-        print(row)
-    con.close()
-
-
-
 @app.route('/form')
 def form():
 
@@ -55,19 +39,10 @@ def data():
         return f"thank you for participation!"
 
 
-def create_db(connection):
-    con = sqlite3.connect(connection)
-    cur = con.cursor()
-    cur.execute('''CREATE TABLE form_data
-                   (answer text)''')
-    con.commit()
-    con.close()
-
-
 def write_to_database(new_form_data, connection):
     con = sqlite3.connect(connection)
     cur = con.cursor()
-    cur.execute(f"INSERT INTO form_data VALUES ({new_form_data['answer']})")
+    cur.execute(f"INSERT INTO form_data VALUES (234)")
     con.close()
 
 
