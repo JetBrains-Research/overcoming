@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overcoming</title>
+</head>
+<body>
+<h1> {{ task_line1 }} </h1>
+<h2> {{ task_line2 }} </h2>
+<form action="/task" method="post">
+    {{ template_form.hidden_tag() }}
+    <p>
+        {{template_form.answer()}}
+    </p>
+    <p>
+        {{template_form.submit()}}
+    </p>
+</form>
+</body>
+</html>

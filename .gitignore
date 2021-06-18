@@ -1,2 +1,4 @@
-venv/
 .DS_store
+venv/
+.idea
+dump/
