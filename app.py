@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField
 from wtforms import SubmitField
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
@@ -12,12 +13,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///myDB.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-
-
-class Tasks(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    task_line1 = db.Column(db.String(300), index=True, unique=False)
-    task_line2 = db.Column(db.String(300), index=True, unique=False)
 
 
 class Answers(db.Model):
@@ -36,15 +31,14 @@ class TaskForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
+with open('tasks.json') as tasks_json:
+    tasks_list = json.load(tasks_json)
+
+
 @app.route('/task', methods=["GET", "POST"])
 def task():
-    task_line_1 = Tasks.query.get(2)
-
-    def task_line1():
-        return task_line_1.task_line1
-
-    def task_line2():
-        return task_line_1.task_line2
+    task_line1 = tasks_list['task'][0]['line1']
+    task_line2 = tasks_list['task'][0]['line2']
 
     answer = request.form.get('answer', False)
     new_answer = Answers(answer)
@@ -53,8 +47,8 @@ def task():
 
     return render_template('task.html',
                            template_form=TaskForm(),
-                           task_line1=task_line1(),
-                           task_line2=task_line2())
+                           task_line1=task_line1,
+                           task_line2=task_line2)
 
 
 if __name__ == "__main__":
