@@ -2,23 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello, user!</title>
 </head>
 <body>
-<h1> {{ task_line1 }} </h1>
-<h2> {{ task_line2 }} </h2>
-<form action="/task" method="post">
+<form action="/user" method="post">
     {{ template_form.hidden_tag() }}
     <p>
         {{template_form.user_name.label}}
+    </p>
+    <p>
         {{template_form.user_name()}}
     </p>
-    <table><tr>
-      {% for btn in template_form.theme %}
-      <td>{{btn()}}</td>
-      <td>{{btn.label}}</td>
+    <tr>
+        {% for btn in template_form.theme %}
+            <td>{{btn}}</td>
+            <td>{{btn.label}}</td>
     {% endfor %}
-    </tr></table>
+    </tr>
     <p>
         {{template_form.submit()}}
     </p>

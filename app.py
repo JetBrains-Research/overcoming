@@ -1,6 +1,8 @@
 from flask import Flask
 from flask import request
 from flask import render_template
+from flask import redirect
+from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField
@@ -59,17 +61,17 @@ class UserForm(FlaskForm):
 
 @app.route('/user', methods=["GET", "POST"])
 def user():
-    user_form = UserForm(csrf_enabled=False)
+    user_form = UserForm()
     if user_form.validate_on_submit():
         user_name = request.form.get('user_name', False)
-        new_user_name = User(username=user_name)
-        db.session.add(new_user_name)
+        theme = request.form.get('theme', False)
+        new = User(username=user_name, theme=theme)
+        db.session.add(new)
         db.session.commit()
 
-        theme = request.form.get('theme', False)
-        u_theme = User(theme=theme)
-        db.session.add(u_theme)
-        db.session.commit()
+        return redirect(url_for("task",
+                                _external=True,
+                                _scheme='http'))
 
     return render_template('user.html',
                            template_form=user_form)
