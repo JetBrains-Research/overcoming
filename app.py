@@ -5,6 +5,7 @@ from flask import redirect
 from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+from sqlalchemy import desc
 from wtforms import TextAreaField
 from wtforms import SubmitField
 from wtforms import StringField
@@ -25,15 +26,16 @@ class Answers(db.Model):
     answer = db.Column(db.String(300), index=True, unique=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, answer):
+    def __init__(self, answer, user_id):
         self.answer = answer
+        self.user_id = user_id
 
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     theme = db.Column(db.String(64), index=True, unique=False)
-    answer = db.relationship('Answers', backref='user', lazy='dynamic')
+    answers = db.relationship('Answers', backref='user', lazy='dynamic')
 
     def __init__(self, username, theme):
         self.username = username
@@ -58,7 +60,7 @@ class UserForm(FlaskForm):
     theme = RadioField("Your usual theme", choices=theme_categories)
     submit = SubmitField("Submit")
 
-
+@app.route('/')
 @app.route('/user', methods=["GET", "POST"])
 def user():
     user_form = UserForm()
@@ -82,8 +84,9 @@ def task():
     task_line1 = tasks_list['task'][0]['line1']
     task_line2 = tasks_list['task'][0]['line2']
 
+    user_id = User.query.order_by(desc("id")).first()
     answer = request.form.get('answer', False)
-    new_answer = Answers(answer=answer)
+    new_answer = Answers(answer=answer, user_id=user_id)
     db.session.add(new_answer)
     db.session.commit()
 
