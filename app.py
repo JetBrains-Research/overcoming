@@ -1,20 +1,9 @@
-from flask import Flask
-from flask import request
-from flask import render_template
-from flask import redirect
-from flask import url_for
+from flask import Flask, request, render_template, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from flask_login import LoginManager
-from flask_login import UserMixin
-from wtforms import TextAreaField
-from wtforms import SubmitField
-from wtforms import StringField
-from wtforms import RadioField
+from wtforms import TextAreaField, SubmitField, StringField, RadioField
 from wtforms.validators import DataRequired
-from flask_login import login_required
 import json
-from flask_login import login_user
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
@@ -23,28 +12,30 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
 
-
-class User(UserMixin, db.Model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    theme = db.Column(db.String(64), index=True, unique=False)
+    username = db.Column(db.String(64), index=True, unique=False)
+    username_hash = db.Column(db.String(128), unique=True)
+    theme = db.Column(db.String(64), unique=False)
     answers = db.relationship('Answers', backref='user', lazy='dynamic')
 
-    def __repr__(self):
-        return '<User {}>'.format(self.username)
+    def __init__(self, username, theme):
+        self.username = username
+        self.theme = theme
+
+    def set_hid(self, username):
+        self.username_hash = hash(username)
 
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     answer = db.Column(db.String(300), index=True, unique=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_hid = db.Column(db.Integer, db.ForeignKey('user.username_hash'))
 
-    def __init__(self, answer, user_id):
+    def __init__(self, answer, user_hid):
         self.answer = answer
-        self.user_id = user_id
+        self.user_hid = user_hid
 
 
 db.create_all()
@@ -66,20 +57,20 @@ class UserForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
 @app.route('/')
 @app.route('/user', methods=["GET", "POST"])
 def user():
     form = UserForm(csrf_enabled=False)
     if form.validate_on_submit():
-        new = User(username=form.user_name.data, theme=form.theme.data)
+        user_name = request.form.get('user_name', False)
+        theme = request.form.get('theme', False)
+        new = User(username=user_name, theme=theme)
+        new.set_hid(form.user_name.data)
+
         db.session.add(new)
         db.session.commit()
-        login_user(new)
+
+        session['user'] = hash(user_name)
 
         return redirect(url_for("task",
                                 _external=True,
@@ -89,21 +80,18 @@ def user():
                            template_form=form)
 
 
-@app.route('/<username>/task', methods=["GET", "POST"])
-@login_required
-def task(username):
-    user = User.query.filter_by(username=username).first_or_404()
+@app.route('/task', methods=["GET", "POST"])
+def task():
+    user_hid = session.get('user', None)
     task_line1 = tasks_list['task'][0]['line1']
     task_line2 = tasks_list['task'][0]['line2']
 
-    user_id = user.id
     answer = request.form.get('answer', False)
-    new_answer = Answers(answer=answer, user_id=user_id)
+    new_answer = Answers(answer=answer, user_hid=user_hid)
     db.session.add(new_answer)
     db.session.commit()
 
     return render_template('task.html',
-                           user=user,
                            template_form=TaskForm(),
                            task_line1=task_line1,
                            task_line2=task_line2)
