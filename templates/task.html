@@ -8,7 +8,7 @@
 <body>
 <h1> {{ task_line1 }} </h1>
 <h2> {{ task_line2 }} </h2>
-<form action="/task" method="post">
+<form action="{{ url_for('task', num=num) }}" method="POST">
     {{ template_form.hidden_tag() }}
     <p>
         {{template_form.answer()}}
