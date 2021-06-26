@@ -30,9 +30,9 @@ class User(db.Model):
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    answer = db.Column(db.String(300), index=True, unique=False)
-    task_num = db.Column(db.Integer, index=True, unique=False)
-    user_hid = db.Column(db.Integer, db.ForeignKey('user.username_hash'))
+    answer = db.Column(db.String(300), unique=False)
+    task_num = db.Column(db.Integer, unique=False)
+    user_hid = db.Column(db.Integer, db.ForeignKey('user.username_hash'), index=True)
 
     def __init__(self, answer, task_num, user_hid):
         self.answer = answer
@@ -44,7 +44,7 @@ db.create_all()
 
 
 class TaskForm(FlaskForm):
-    answer = TextAreaField("Answer")
+    answer = TextAreaField("Answer", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 
@@ -68,12 +68,9 @@ def user():
         theme = request.form.get('theme', False)
         new = User(username=user_name, theme=theme)
         new.set_hid(form.user_name.data)
-
         db.session.add(new)
         db.session.commit()
-
         session['user'] = hash(user_name)
-
         return redirect(url_for("task",
                                 num=0,
                                 _external=True,
@@ -88,19 +85,24 @@ def task(num):
     form = TaskForm(csrf_enabled=False)
     task_line1 = tasks_list['task'][int(num)]['line1']
     task_line2 = tasks_list['task'][int(num)]['line2']
-    while int(num) <= 2:
-        user_hid = session.get('user', None)
-        answer = request.form.get('answer', False)
-        new_answer = Answers(answer=answer, user_hid=user_hid, task_num=num)
-        db.session.add(new_answer)
-        db.session.commit()
-        new_num = int(num)+1
+    new_num = int(num) + 1
+    if form.validate_on_submit():
+        if int(num) <= 2:
+            user_hid = session.get('user', None)
+            answer = form.answer.data
+            new_answer = Answers(answer=answer, user_hid=user_hid, task_num=num)
+            db.session.add(new_answer)
+            db.session.commit()
+            return redirect(url_for("task",
+                                    num=new_num,
+                                    _external=True,
+                                    _scheme='http'))
 
-        return render_template('task.html',
-                               num=new_num,
-                               template_form=form,
-                               task_line1=task_line1,
-                               task_line2=task_line2)
+    return render_template('task.html',
+                           num=num,
+                           template_form=form,
+                           task_line1=task_line1,
+                           task_line2=task_line2)
 
 
 if __name__ == "__main__":
