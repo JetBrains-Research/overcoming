@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reasons</title>
+</head>
+<body>
+Спасибо! Этап с задачами подошел к концу.
+<p>
+Как вы заметили, каждая задача повторялась два раза.
+<p>
+Пожалуйста, как можно более развернуто ответьте почему вы решили изменить или не менять способ решения задачи, когда она была предъявлена второй раз.
+</p>
+<form action="/post" method="POST">
+    {{ template_form.hidden_tag() }}
+    <p>
+        {{template_form.reason()}}
+    </p>
+    <p>
+        {{template_form.submit()}}
+    </p>
+</form>
+
+</body>
+</html>

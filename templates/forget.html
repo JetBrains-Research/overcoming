@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forget</title>
+</head>
+<body>
+Забудьте предыдущие решения и задачи, они были тренировочными.
+<p>
+Мы приступаем к основному этапу.
+<p>
+    Нажмите «Дальше», когда будете готовы
+</p>
+<form action="{{ url_for("task", num=0, block_num=2) }}">
+    <input type="submit" value="Дальше" />
+</form>
+</body>
+</html>

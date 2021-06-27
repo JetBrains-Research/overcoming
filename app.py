@@ -18,11 +18,13 @@ class User(db.Model):
     username = db.Column(db.String(64), index=True, unique=False)
     username_hash = db.Column(db.String(128), unique=True)
     theme = db.Column(db.String(64), unique=False)
+    reason = db.Column(db.String(500), index=True, unique=False)
     answers = db.relationship('Answers', backref='user', lazy='dynamic')
 
-    def __init__(self, username, theme):
+    def __init__(self, username, theme, reason):
         self.username = username
         self.theme = theme
+        self.reason = reason
 
     def set_hid(self, username):
         self.username_hash = hash(username)
@@ -30,12 +32,14 @@ class User(db.Model):
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    answer = db.Column(db.String(300), unique=False)
-    task_num = db.Column(db.Integer, unique=False)
     user_hid = db.Column(db.Integer, db.ForeignKey('user.username_hash'), index=True)
+    block = db.Column(db.Integer, unique=False)
+    task_num = db.Column(db.Integer, unique=False)
+    answer = db.Column(db.String(300), unique=False)
 
-    def __init__(self, answer, task_num, user_hid):
+    def __init__(self, answer, block, task_num, user_hid):
         self.answer = answer
+        self.block = block
         self.task_num = task_num
         self.user_hid = user_hid
 
@@ -59,20 +63,28 @@ class UserForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
+class PostForm(FlaskForm):
+    reason = TextAreaField("Reason", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+
 @app.route('/')
+def index():
+    return render_template('index.html')
+
+
 @app.route('/user', methods=["GET", "POST"])
 def user():
     form = UserForm(csrf_enabled=False)
     if form.validate_on_submit():
         user_name = request.form.get('user_name', False)
         theme = request.form.get('theme', False)
-        new = User(username=user_name, theme=theme)
+        new = User(username=user_name, theme=theme, reason="")
         new.set_hid(form.user_name.data)
         db.session.add(new)
         db.session.commit()
         session['user'] = hash(user_name)
-        return redirect(url_for("task",
-                                num=0,
+        return redirect(url_for("instruction",
                                 _external=True,
                                 _scheme='http'))
 
@@ -80,29 +92,69 @@ def user():
                            template_form=form)
 
 
-@app.route('/task/<int:num>', methods=["GET", "POST"])
-def task(num):
+@app.route('/instruction')
+def instruction():
+    return render_template('instruction.html')
+
+
+@app.route('/task/<int:num>/<int:block_num>', methods=["GET", "POST"])
+def task(num, block_num):
     form = TaskForm(csrf_enabled=False)
-    task_line1 = tasks_list['task'][int(num)]['line1']
-    task_line2 = tasks_list['task'][int(num)]['line2']
     new_num = int(num) + 1
+    block_num = block_num
+    if int(num) > 2 and block_num == 1:
+        return redirect(url_for("forget",
+                                _external=True,
+                                _scheme='http'))
+    if int(num) > 2 and block_num == 2:
+        return redirect(url_for("post",
+                                _external=True,
+                                _scheme='http'))
+
     if form.validate_on_submit():
         if int(num) <= 2:
             user_hid = session.get('user', None)
             answer = form.answer.data
-            new_answer = Answers(answer=answer, user_hid=user_hid, task_num=num)
+            new_answer = Answers(answer=answer, block=block_num, user_hid=user_hid, task_num=num)
             db.session.add(new_answer)
             db.session.commit()
             return redirect(url_for("task",
                                     num=new_num,
+                                    block_num=block_num,
                                     _external=True,
                                     _scheme='http'))
 
     return render_template('task.html',
                            num=num,
+                           block_num=block_num,
                            template_form=form,
-                           task_line1=task_line1,
-                           task_line2=task_line2)
+                           task_line1=tasks_list['task'][int(num)]['line1'],
+                           task_line2=tasks_list['task'][int(num)]['line2'])
+
+
+@app.route('/forget')
+def forget():
+    return render_template('forget.html')
+
+
+@app.route('/post', methods=["GET", "POST"])
+def post():
+    form = PostForm(csrf_enabled=False)
+    if form.validate_on_submit():
+        user_hid = session.get('user', None)
+        user_row = User.query.filter_by(username_hash=user_hid).first()
+        user_row.reason += form.reason.data
+        db.session.commit()
+        return redirect(url_for("fin",
+                                _external=True,
+                                _scheme='http'))
+
+    return render_template('post.html', template_form=form)
+
+
+@app.route('/fin')
+def fin():
+    return render_template('fin.html')
 
 
 if __name__ == "__main__":
