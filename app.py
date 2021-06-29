@@ -83,6 +83,7 @@ def user():
         new.set_hid(form.user_name.data)
         db.session.add(new)
         db.session.commit()
+        session['theme'] = theme
         session['user'] = hash(user_name)
         return redirect(url_for("instruction",
                                 _external=True,
@@ -94,7 +95,8 @@ def user():
 
 @app.route('/instruction')
 def instruction():
-    return render_template('instruction.html')
+    theme = session.get('theme', None)
+    return render_template('instruction.html', theme=theme)
 
 
 @app.route('/task/<int:num>/<int:block_num>', methods=["GET", "POST"])
@@ -102,6 +104,7 @@ def task(num, block_num):
     form = TaskForm(csrf_enabled=False)
     new_num = int(num) + 1
     block_num = block_num
+    theme = session.get('theme', None)
     if int(num) > 2 and block_num == 1:
         return redirect(url_for("forget",
                                 _external=True,
@@ -128,17 +131,20 @@ def task(num, block_num):
                            num=num,
                            block_num=block_num,
                            template_form=form,
+                           theme=theme,
                            task_line1=tasks_list['task'][int(num)]['line1'],
                            task_line2=tasks_list['task'][int(num)]['line2'])
 
 
 @app.route('/forget')
 def forget():
-    return render_template('forget.html')
+    theme = session.get('theme', None)
+    return render_template('forget.html', theme=theme)
 
 
 @app.route('/post', methods=["GET", "POST"])
 def post():
+    theme = session.get('theme', None)
     form = PostForm(csrf_enabled=False)
     if form.validate_on_submit():
         user_hid = session.get('user', None)
@@ -149,12 +155,13 @@ def post():
                                 _external=True,
                                 _scheme='http'))
 
-    return render_template('post.html', template_form=form)
+    return render_template('post.html', template_form=form, theme=theme)
 
 
 @app.route('/fin')
 def fin():
-    return render_template('fin.html')
+    theme = session.get('theme', None)
+    return render_template('fin.html', theme=theme)
 
 
 if __name__ == "__main__":

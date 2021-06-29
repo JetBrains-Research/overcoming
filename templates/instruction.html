@@ -1,18 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
+    {% if theme=='Dark' %}
+    <style>
+        body {background-color: #282a36; font-family: "JetBrains Mono", sans-serif; padding: 30px}
+        textarea {background-color: #282a36; color: #f8f8f2; font-family: "JetBrains Mono", sans-serif}
+        input {background-color: #f8f8f2; color: #282a36; font-family: "JetBrains Mono", sans-serif}
+        h1 {color: #f8f8f2;}
+        h2 {color: #f8f8f2;}
+        p {color: #f8f8f2;}
+    </style>
+    {%else%}
+    <style>
+        body {background-color: #f5f5f5; font-family: "JetBrains Mono", sans-serif; padding: 30px}
+        textarea {background-color: #f5f5f5; color: #0c0b0b; font-family: "JetBrains Mono", sans-serif;}
+        input {background-color: #0c0b0b; color: #f5f5f5; font-family: "JetBrains Mono", sans-serif}
+        h1 {color: #0c0b0b;}
+        h2 {color: #0c0b0b;}
+        p {color: #0c0b0b;}
+    </style>
+    {% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instruction</title>
 </head>
 <body>
-Спасибо, что ответили на вопросы нашей анкеты!
 <p>
-    В следующие 20 минут вам предстоит решить набор задач, требующих использование кода. Пожалуйста, используйте наиболее эффективные способы решения.</p>
+    Спасибо, что ответили на вопросы нашей анкеты!
+</p>
 <p>
-    На каждую задачу дается 2,5 минуты. Когда решение будет готово, нажмите «Дальше», чтобы перейти к следующей задаче.</p>
+    В следующие 20 минут вам предстоит решить набор задач, требующих использование кода. Пожалуйста, используйте наиболее эффективные способы решения.
+</p>
 <p>
-Если вы поняли инструкцию и готовы продолжать, пожалуйста, нажмите «Дальше».
+    На каждую задачу дается 2,5 минуты. Когда решение будет готово, нажмите «Дальше», чтобы перейти к следующей задаче.
+</p>
+<p>
+    Если вы поняли инструкцию и готовы продолжать, пожалуйста, нажмите «Дальше».
 </p>
 <form action="{{ url_for("task", num=0, block_num=1) }}">
     <input type="submit" value="Дальше" />
