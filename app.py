@@ -15,6 +15,7 @@ db = SQLAlchemy(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    group = db.Column(db.Integer, unique=False)
     username = db.Column(db.String(64), index=True, unique=False)
     username_hash = db.Column(db.String(128), unique=True)
     theme = db.Column(db.String(64), unique=False)
@@ -28,6 +29,16 @@ class User(db.Model):
 
     def set_hid(self, username):
         self.username_hash = hash(username)
+
+    def set_group(self, id):
+        if id % 4 == 0:
+            self.group = 4
+        elif id % 4 == 1:
+            self.group = 1
+        elif id % 4 == 2:
+            self.group = 2
+        elif id % 4 == 3:
+            self.group = 3
 
 
 class Answers(db.Model):
@@ -85,6 +96,14 @@ def user():
         db.session.commit()
         session['theme'] = theme
         session['user'] = hash(user_name)
+
+        user_hid = session.get('user', None)
+        user_row = User.query.filter_by(username_hash=user_hid).first()
+        new.set_group(user_row.id)
+        db.session.add(new)
+        db.session.commit()
+        session['group'] = user_row.group
+
         return redirect(url_for("instruction",
                                 _external=True,
                                 _scheme='http'))
@@ -99,16 +118,47 @@ def instruction():
     return render_template('instruction.html', theme=theme)
 
 
-@app.route('/task/<int:num>/<int:block_num>', methods=["GET", "POST"])
-def task(num, block_num):
+@app.route('/task/<int:num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
+def task(num, block_num, theme):
     form = TaskForm(csrf_enabled=False)
     new_num = int(num) + 1
     block_num = block_num
-    theme = session.get('theme', None)
-    if int(num) > 2 and block_num == 1:
+    theme = theme
+    group = session.get('group', None)
+
+    if int(num) > 2 and block_num == 1 and group == 1:
         return redirect(url_for("forget",
                                 _external=True,
                                 _scheme='http'))
+
+    if int(num) > 2 and block_num == 1 and group == 2 and theme == 'Dark':
+        return redirect(url_for("task",
+                                num=0,
+                                block_num=2,
+                                theme='Light',
+                                _external=True,
+                                _scheme='http'))
+    if int(num) > 2 and block_num == 1 and group == 2 and theme == 'Light':
+        return redirect(url_for("task",
+                                num=0,
+                                block_num=2,
+                                theme='Dark',
+                                _external=True,
+                                _scheme='http'))
+
+    if int(num) > 2 and block_num == 1 and group == 3:
+        return redirect(url_for("forget",
+                                _external=True,
+                                _scheme='http'))
+
+    if int(num) > 2 and block_num == 1 and group == 4:
+        return redirect(url_for("task",
+                                num=0,
+                                block_num=2,
+                                theme=theme,
+                                _external=True,
+                                _scheme='http'))
+
     if int(num) > 2 and block_num == 2:
         return redirect(url_for("post",
                                 _external=True,
@@ -124,6 +174,7 @@ def task(num, block_num):
             return redirect(url_for("task",
                                     num=new_num,
                                     block_num=block_num,
+                                    theme=theme,
                                     _external=True,
                                     _scheme='http'))
 
@@ -139,12 +190,36 @@ def task(num, block_num):
 @app.route('/forget')
 def forget():
     theme = session.get('theme', None)
-    return render_template('forget.html', theme=theme)
+    group = session.get('group', None)
+    if group == '1' and theme == 'Dark':
+        return redirect(url_for("task",
+                                num=0,
+                                block_num=2,
+                                theme=theme,
+                                _external=True,
+                                _scheme='http'))
+
+    if group == '3' and theme == 'Dark':
+        return redirect(url_for("task",
+                                num=0,
+                                block_num=2,
+                                theme='Light',
+                                _external=True,
+                                _scheme='http'))
+
+    if group == '3' and theme == 'Light':
+        return redirect(url_for("task",
+                                num=0,
+                                block_num=2,
+                                theme='Dark',
+                                _external=True,
+                                _scheme='http'))
+
+    return render_template('forget.html', theme=theme, group=group)
 
 
 @app.route('/post', methods=["GET", "POST"])
 def post():
-    theme = session.get('theme', None)
     form = PostForm(csrf_enabled=False)
     if form.validate_on_submit():
         user_hid = session.get('user', None)
@@ -155,15 +230,13 @@ def post():
                                 _external=True,
                                 _scheme='http'))
 
-    return render_template('post.html', template_form=form, theme=theme)
+    return render_template('post.html', template_form=form)
 
 
 @app.route('/fin')
 def fin():
-    theme = session.get('theme', None)
-    return render_template('fin.html', theme=theme)
+    return render_template('fin.html')
 
 
 if __name__ == "__main__":
-
     app.run(host="127.0.0.1", port=8080, debug=True)

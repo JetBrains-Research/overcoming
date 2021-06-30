@@ -34,8 +34,9 @@
 <p>
     Нажмите «Дальше», когда будете готовы
 </p>
-<form action="{{ url_for("task", num=0, block_num=2) }}">
-    <input type="submit" value="Дальше" />
+<form action="{{ url_for('task', num=num, block_num=block_num, theme=theme) }}">
+    <input type="submit">Дальше</input>
 </form>
+
 </body>
 </html>
