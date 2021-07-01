@@ -191,31 +191,7 @@ def task(num, block_num, theme):
 def forget():
     theme = session.get('theme', None)
     group = session.get('group', None)
-    if group == '1' and theme == 'Dark':
-        return redirect(url_for("task",
-                                num=0,
-                                block_num=2,
-                                theme=theme,
-                                _external=True,
-                                _scheme='http'))
-
-    if group == '3' and theme == 'Dark':
-        return redirect(url_for("task",
-                                num=0,
-                                block_num=2,
-                                theme='Light',
-                                _external=True,
-                                _scheme='http'))
-
-    if group == '3' and theme == 'Light':
-        return redirect(url_for("task",
-                                num=0,
-                                block_num=2,
-                                theme='Dark',
-                                _external=True,
-                                _scheme='http'))
-
-    return render_template('forget.html', theme=theme, group=group)
+    return render_template('forget.html', theme=theme, group=group, num=0, block_num=2)
 
 
 @app.route('/post', methods=["GET", "POST"])
