@@ -1,5 +1,4 @@
 .DS_store
 venv/
 .idea
-dump/
-dump/pyvenv.cfg
+/dump/
