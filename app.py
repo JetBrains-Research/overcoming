@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SubmitField, StringField, RadioField
 from wtforms.validators import DataRequired
+from datetime import datetime
 import json
 
 app = Flask(__name__)
@@ -17,18 +18,20 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group = db.Column(db.Integer, unique=False)
     username = db.Column(db.String(64), index=True, unique=False)
-    username_hash = db.Column(db.String(128), unique=True)
+    time = db.Column(db.DateTime(), default=datetime.now(), index=True, unique=True)
+    time_hash = db.Column(db.String(128), unique=True)
     theme = db.Column(db.String(64), unique=False)
     reason = db.Column(db.String(500), index=True, unique=False)
     answers = db.relationship('Answers', backref='user', lazy='dynamic')
 
-    def __init__(self, username, theme, reason):
+    def __init__(self, username, theme, reason, time):
         self.username = username
         self.theme = theme
         self.reason = reason
+        self.time = time
 
-    def set_hid(self, username):
-        self.username_hash = hash(username)
+    def set_hid(self, time):
+        self.time_hash = hash(time)
 
     def set_group(self, id):
         if id % 4 == 0:
@@ -39,11 +42,12 @@ class User(db.Model):
             self.group = 2
         elif id % 4 == 3:
             self.group = 3
+# 1 - forget, 2 - change, 3 - forget+change, 4 - control
 
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_hid = db.Column(db.Integer, db.ForeignKey('user.username_hash'), index=True)
+    user_hid = db.Column(db.Integer, db.ForeignKey('user.time_hash'), index=True)
     block = db.Column(db.Integer, unique=False)
     task_num = db.Column(db.Integer, unique=False)
     answer = db.Column(db.String(300), unique=False)
@@ -86,22 +90,45 @@ def index():
 
 @app.route('/user', methods=["GET", "POST"])
 def user():
-    form = UserForm(csrf_enabled=False)
+    form = UserForm(meta={'csrf': False})
     if form.validate_on_submit():
         user_name = request.form.get('user_name', False)
         theme = request.form.get('theme', False)
-        new = User(username=user_name, theme=theme, reason="")
-        new.set_hid(form.user_name.data)
+        time = datetime.now()
+        new = User(username=user_name, theme=theme, reason="", time=time)
+        new.set_hid(time)
         db.session.add(new)
         db.session.commit()
         session['theme'] = theme
-        session['user'] = hash(user_name)
+        session['user'] = hash(time)
 
         user_hid = session.get('user', None)
-        user_row = User.query.filter_by(username_hash=user_hid).first()
-        new.set_group(user_row.id)
-        db.session.add(new)
-        db.session.commit()
+        user_row = User.query.filter_by(time_hash=user_hid).first()
+        if user_row.username == "forget":
+            new.set_group(1)
+            db.session.add(new)
+            db.session.commit()
+
+        elif user_row.username == "change":
+            new.set_group(2)
+            db.session.add(new)
+            db.session.commit()
+
+        elif user_row.username == "all":
+            new.set_group(3)
+            db.session.add(new)
+            db.session.commit()
+
+        elif user_row.username == "control":
+            new.set_group(4)
+            db.session.add(new)
+            db.session.commit()
+
+        else:
+            new.set_group(user_row.id)
+            db.session.add(new)
+            db.session.commit()
+
         session['group'] = user_row.group
 
         return redirect(url_for("instruction",
@@ -120,7 +147,7 @@ def instruction():
 
 @app.route('/task/<int:num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
 def task(num, block_num, theme):
-    form = TaskForm(csrf_enabled=False)
+    form = TaskForm(meta={'csrf': False})
     new_num = int(num) + 1
     block_num = block_num
     theme = theme
@@ -196,10 +223,10 @@ def forget():
 
 @app.route('/post', methods=["GET", "POST"])
 def post():
-    form = PostForm(csrf_enabled=False)
+    form = PostForm(meta={'csrf': False})
     if form.validate_on_submit():
         user_hid = session.get('user', None)
-        user_row = User.query.filter_by(username_hash=user_hid).first()
+        user_row = User.query.filter_by(time_hash=user_hid).first()
         user_row.reason += form.reason.data
         db.session.commit()
         return redirect(url_for("fin",
