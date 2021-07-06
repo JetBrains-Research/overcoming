@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, session, redirect, url_for
+from flask import Flask, request, render_template, session, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SubmitField, StringField, RadioField
@@ -63,7 +63,7 @@ db.create_all()
 
 
 class TaskForm(FlaskForm):
-    answer = TextAreaField("Answer", validators=[DataRequired()])
+    #answer = TextAreaField("Answer", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 
@@ -145,6 +145,42 @@ def instruction():
     return render_template('instruction.html', theme=theme)
 
 
+@app.route('/process_code', methods=['POST', 'GET'])
+def process_code():
+    if request.method == "POST":
+
+        code = request.get_json()
+        # theme = session['theme']
+        user = session['user']
+        # num=2
+        # block_num=0
+
+        answer = Answers(answer=code[0]['code'], block=2, user_hid=user, task_num=2)
+        db.session.add(answer)
+        db.session.commit()
+        #rows = db.session.query(answer).count()
+        results = {'code_uploaded': 'True'}
+
+        return jsonify(results)
+
+
+# @app.route('/task/<int:num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
+# def task(num, block_num, theme):
+#     form = TaskForm(meta={'csrf': False})
+#     new_num = int(num) + 1
+#     block_num = block_num
+#     theme = theme
+#     group = session.get('group', None)
+#
+#     return render_template('task.html',
+#                            num=new_num,
+#                            block_num=block_num,
+#                            template_form=form,
+#                            theme=theme,
+#                            task_line1=tasks_list['task'][int(num)]['line1'],
+#                            task_line2=tasks_list['task'][int(num)]['line2'])
+#
+
 @app.route('/task/<int:num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
 def task(num, block_num, theme):
     form = TaskForm(meta={'csrf': False})
@@ -165,6 +201,7 @@ def task(num, block_num, theme):
                                 theme='Light',
                                 _external=True,
                                 _scheme='http'))
+
     if int(num) > 2 and block_num == 1 and group == 2 and theme == 'Light':
         return redirect(url_for("task",
                                 num=0,
@@ -194,10 +231,10 @@ def task(num, block_num, theme):
     if form.validate_on_submit():
         if int(num) <= 2:
             user_hid = session.get('user', None)
-            answer = form.answer.data
-            new_answer = Answers(answer=answer, block=block_num, user_hid=user_hid, task_num=num)
-            db.session.add(new_answer)
-            db.session.commit()
+            #answer = form.answer.data
+            #new_answer = Answers(answer=answer, block=block_num, user_hid=user_hid, task_num=num)
+            #db.session.add(new_answer)
+            #db.session.commit()
             return redirect(url_for("task",
                                     num=new_num,
                                     block_num=block_num,
