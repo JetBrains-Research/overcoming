@@ -2,18 +2,38 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    {% if theme=='Dark' %}
+    <link href='/static/dark.css' rel='stylesheet'>
+    {%else%}
+    <link href='/static/light.css' rel='stylesheet'>
+    {% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forget</title>
 </head>
 <body>
-Забудьте предыдущие решения и задачи, они были тренировочными.
+<h2>Забудьте предыдущие решения и задачи – они были тренировочными.</h2>
 <p>
 Мы приступаем к основному этапу.
-<p>
+<br><br>
     Нажмите «Дальше», когда будете готовы
 </p>
-<form action="{{ url_for("task", num=0, block_num=2) }}">
-    <input type="submit" value="Дальше" />
-</form>
+{% if group == 1 and theme == 'Dark' %}
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme=theme) }}" >
+        <input type="submit" value="Дальше" />
+    </form>
+{% elif group == 1 and theme == 'Light'%}
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme=theme) }}" >
+        <input type="submit" value="Дальше" />
+    </form>
+{% elif group == 3 and theme == 'Dark'%}
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme="Light") }}" >
+        <input type="submit" value="Дальше" />
+    </form>
+{% elif group == 3 and theme == 'Light'%}
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme='Dark') }}">
+        <input type="submit" value="Дальше" />
+    </form>
+{% endif %}
+
 </body>
 </html>

@@ -1,0 +1,23 @@
+html {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body {
+    overflow: hidden;
+    font-family: Tahoma, Verdana, sans-serif;
+    font-size: 16px;
+    background: #272822;
+    color: #F8F8F2;
+}
+
+input {
+    background-color: #F8F8F2;
+    color: #272822;
+    font-family: Tahoma, Verdana, sans-serif;
+    border-radius: 4px;
+}

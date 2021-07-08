@@ -3,23 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='../static/usual.css' rel='stylesheet'>
     <title>Hello, user!</title>
 </head>
 <body>
 <form action="/user" method="POST">
     {{ template_form.hidden_tag() }}
+    <h2>
+        Пожалуйста, введите ваши имя и фамилию:
+    </h2>
     <p>
-        {{template_form.user_name.label}}
+        {{template_form.username()}}
     </p>
-    <p>
-        {{template_form.user_name()}}
-    </p>
+<br>
+    <h2> Пожалуйста, выберите тип темы привычного для вас редактора кода:
+    </h2>
     <tr>
         {% for btn in template_form.theme %}
             <td>{{btn}}</td>
             <td>{{btn.label}}</td>
     {% endfor %}
     </tr>
+<br><br>
     <p>
         {{template_form.submit()}}
     </p>
