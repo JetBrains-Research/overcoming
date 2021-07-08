@@ -18,19 +18,19 @@
     Нажмите «Дальше», когда будете готовы
 </p>
 {% if group == 1 and theme == 'Dark' %}
-    <form action="{{ url_for("task", num=0, block_num=2, theme=theme) }}" method="post">
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme=theme) }}" >
         <input type="submit" value="Дальше" />
     </form>
 {% elif group == 1 and theme == 'Light'%}
-    <form action="{{ url_for("task", num=0, block_num=2, theme=theme) }}" method="post">
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme=theme) }}" >
         <input type="submit" value="Дальше" />
     </form>
-{% elif group == 3 and theme == 'Dark' %}
-    <form action="{{ url_for("task", num=0, block_num=2, theme='Light') }}" method="post">
+{% elif group == 3 and theme == 'Dark'%}
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme="Light") }}" >
         <input type="submit" value="Дальше" />
     </form>
 {% elif group == 3 and theme == 'Light'%}
-    <form action="{{ url_for("task", num=0, block_num=2, theme='Dark') }}" method="post">
+    <form action="{{ url_for("task", task_num=0, block_num=2, theme='Dark') }}">
         <input type="submit" value="Дальше" />
     </form>
 {% endif %}

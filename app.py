@@ -29,32 +29,23 @@ class User(db.Model):
         self.theme = theme
         self.reason = reason
         self.time = time
-
-    def set_hid(self, time):
         self.time_hash = hash(time)
 
     def set_group(self, id):
-        if id % 4 == 0:
-            self.group = 4
-        elif id % 4 == 1:
-            self.group = 1
-        elif id % 4 == 2:
-            self.group = 2
-        elif id % 4 == 3:
-            self.group = 3
-# 1 - forget, 2 - change, 3 - forget+change, 4 - control
+        self.group = id % 4 if (id % 4 >= 1) & (id % 4 < 4) else 0
+        # 0 - control, 1 - forget, 2 - change, 3 - forget+change
 
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_hid = db.Column(db.Integer, db.ForeignKey('user.time_hash'), index=True)
-    block = db.Column(db.Integer, unique=False)
+    block_num = db.Column(db.Integer, unique=False)
     task_num = db.Column(db.Integer, unique=False)
     answer = db.Column(db.String(300), unique=False)
 
-    def __init__(self, answer, block, task_num, user_hid):
+    def __init__(self, answer, block_num, task_num, user_hid):
         self.answer = answer
-        self.block = block
+        self.block_num = block_num
         self.task_num = task_num
         self.user_hid = user_hid
 
@@ -62,8 +53,7 @@ class Answers(db.Model):
 db.create_all()
 
 
-class TaskForm(FlaskForm):
-    #answer = TextAreaField("Answer", validators=[DataRequired()])
+class SubmitForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
@@ -73,7 +63,7 @@ with open('tasks.json') as tasks_json:
 
 class UserForm(FlaskForm):
     theme_categories = [("Light", "Light"), ("Dark", "Dark")]
-    user_name = StringField("User name", validators=[DataRequired()])
+    username = StringField("User name", validators=[DataRequired()])
     theme = RadioField("Your usual theme", choices=theme_categories)
     submit = SubmitField("Submit")
 
@@ -92,48 +82,30 @@ def index():
 def user():
     form = UserForm(meta={'csrf': False})
     if form.validate_on_submit():
-        user_name = request.form.get('user_name', False)
+        username = request.form.get('username', False)
         theme = request.form.get('theme', False)
         time = datetime.now()
-        new = User(username=user_name, theme=theme, reason="", time=time)
-        new.set_hid(time)
-        db.session.add(new)
-        db.session.commit()
-        session['theme'] = theme
-        session['user'] = hash(time)
+        new_user = User(username=username, theme=theme, reason="", time=time)
+        db.session.add(new_user)
 
+        session['user'] = hash(time)
         user_hid = session.get('user', None)
         user_row = User.query.filter_by(time_hash=user_hid).first()
-        if user_row.username == "forget":
-            new.set_group(1)
-            db.session.add(new)
-            db.session.commit()
+        name2group = {"control": 0, "forget": 1, "change": 2, "all": 3}
 
-        elif user_row.username == "change":
-            new.set_group(2)
-            db.session.add(new)
-            db.session.commit()
-
-        elif user_row.username == "all":
-            new.set_group(3)
-            db.session.add(new)
-            db.session.commit()
-
-        elif user_row.username == "control":
-            new.set_group(4)
-            db.session.add(new)
-            db.session.commit()
-
+        if user_row.username in name2group.keys():
+            group = name2group[user_row.username]
         else:
-            new.set_group(user_row.id)
-            db.session.add(new)
-            db.session.commit()
+            group = user_row.id
+
+        db.session.refresh(new_user)
+        new_user.set_group(group)
+        db.session.commit()
 
         session['group'] = user_row.group
+        session['theme'] = theme
 
-        return redirect(url_for("instruction",
-                                _external=True,
-                                _scheme='http'))
+        return redirect(url_for("instruction"))
 
     return render_template('user.html',
                            template_form=form)
@@ -148,114 +120,57 @@ def instruction():
 @app.route('/process_code', methods=['POST', 'GET'])
 def process_code():
     if request.method == "POST":
-
         code = request.get_json()
-        # theme = session['theme']
-        user = session['user']
-        # num=2
-        # block_num=0
-
-        answer = Answers(answer=code[0]['code'], block=2, user_hid=user, task_num=2)
+        user_hid = session.get('user', None)
+        block_num = session.get('block_num', None)
+        task_num = session.get('task_num', None)
+        answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid, task_num=task_num)
         db.session.add(answer)
         db.session.commit()
-        #rows = db.session.query(answer).count()
         results = {'code_uploaded': 'True'}
-
         return jsonify(results)
 
 
-# @app.route('/task/<int:num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
-# def task(num, block_num, theme):
-#     form = TaskForm(meta={'csrf': False})
-#     new_num = int(num) + 1
-#     block_num = block_num
-#     theme = theme
-#     group = session.get('group', None)
-#
-#     return render_template('task.html',
-#                            num=new_num,
-#                            block_num=block_num,
-#                            template_form=form,
-#                            theme=theme,
-#                            task_line1=tasks_list['task'][int(num)]['line1'],
-#                            task_line2=tasks_list['task'][int(num)]['line2'])
-#
-
-@app.route('/task/<int:num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
-def task(num, block_num, theme):
-    form = TaskForm(meta={'csrf': False})
-    new_num = int(num) + 1
-    block_num = block_num
-    theme = theme
+@app.route('/task/<int:task_num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
+def task(task_num, block_num, theme):
+    form = SubmitForm(meta={'csrf': False})
+    next_task_num = task_num + 1
     group = session.get('group', None)
+    session['block_num'] = block_num
+    session['task_num'] = task_num
 
-    if int(num) > 2 and block_num == 1 and group == 1:
-        return redirect(url_for("forget",
-                                _external=True,
-                                _scheme='http'))
+    if form.validate_on_submit() and task_num <= 2:
+        return redirect(url_for("task",task_num=next_task_num,block_num=block_num,theme=theme))
 
-    if int(num) > 2 and block_num == 1 and group == 2 and theme == 'Dark':
-        return redirect(url_for("task",
-                                num=0,
-                                block_num=2,
-                                theme='Light',
-                                _external=True,
-                                _scheme='http'))
+    if task_num > 2 and block_num == 1 and (group == 1 or group == 3):
+        return redirect(url_for("forget", _external=True, _scheme='http'))
 
-    if int(num) > 2 and block_num == 1 and group == 2 and theme == 'Light':
-        return redirect(url_for("task",
-                                num=0,
-                                block_num=2,
-                                theme='Dark',
-                                _external=True,
-                                _scheme='http'))
+    if task_num > 2 and block_num == 1 and group == 2 and theme == 'Dark':
+        return redirect(url_for("task",task_num=0,block_num=2,theme="Light"))
 
-    if int(num) > 2 and block_num == 1 and group == 3:
-        return redirect(url_for("forget",
-                                _external=True,
-                                _scheme='http'))
+    if task_num > 2 and block_num == 1 and group == 2 and theme == 'Light':
+        return redirect(url_for("task",task_num=0,block_num=2,theme='Dark'))
 
-    if int(num) > 2 and block_num == 1 and group == 4:
-        return redirect(url_for("task",
-                                num=0,
-                                block_num=2,
-                                theme=theme,
-                                _external=True,
-                                _scheme='http'))
+    if task_num > 2 and block_num == 1 and group == 0:
+        return redirect(url_for("task",task_num=0,block_num=2,theme=theme))
 
-    if int(num) > 2 and block_num == 2:
-        return redirect(url_for("post",
-                                _external=True,
-                                _scheme='http'))
-
-    if form.validate_on_submit():
-        if int(num) <= 2:
-            user_hid = session.get('user', None)
-            #answer = form.answer.data
-            #new_answer = Answers(answer=answer, block=block_num, user_hid=user_hid, task_num=num)
-            #db.session.add(new_answer)
-            #db.session.commit()
-            return redirect(url_for("task",
-                                    num=new_num,
-                                    block_num=block_num,
-                                    theme=theme,
-                                    _external=True,
-                                    _scheme='http'))
+    if task_num > 2 and block_num == 2:
+        return redirect(url_for("post"))
 
     return render_template('task.html',
-                           num=num,
+                           task_num=task_num,
                            block_num=block_num,
                            template_form=form,
                            theme=theme,
-                           task_line1=tasks_list['task'][int(num)]['line1'],
-                           task_line2=tasks_list['task'][int(num)]['line2'])
+                           task_line1=tasks_list['task'][task_num]['line1'],
+                           task_line2=tasks_list['task'][task_num]['line2'])
 
 
 @app.route('/forget')
 def forget():
     theme = session.get('theme', None)
     group = session.get('group', None)
-    return render_template('forget.html', theme=theme, group=group, num=0, block_num=2)
+    return render_template('forget.html', theme=theme, group=group, task_num=0, block_num=2)
 
 
 @app.route('/post', methods=["GET", "POST"])
@@ -266,9 +181,7 @@ def post():
         user_row = User.query.filter_by(time_hash=user_hid).first()
         user_row.reason += form.reason.data
         db.session.commit()
-        return redirect(url_for("fin",
-                                _external=True,
-                                _scheme='http'))
+        return redirect(url_for("fin"))
 
     return render_template('post.html', template_form=form)
 
