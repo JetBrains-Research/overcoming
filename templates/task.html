@@ -19,11 +19,11 @@
 <h2> {{ task_line2 }} </h2>
 <div id="editor" style="width: 500px; height: 150px">{{task_line1}}</div>
 <script>
-    const editor = ace.edit("editor");
+const editor = ace.edit("editor");
     {% if theme=='Dark' %}
-    editor.setTheme("ace/theme/monokai");
+        editor.setTheme("ace/theme/monokai");
     {%else%}
-    editor.setTheme("ace/theme/eclipse");
+        editor.setTheme("ace/theme/eclipse");
     {% endif %}
     editor.session.setMode("ace/mode/python");
 </script>
