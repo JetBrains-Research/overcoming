@@ -8,7 +8,7 @@ import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///myDB.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/myDB.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -192,4 +192,7 @@ def fin():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)
+
+# docker build -t test:test .
+# docker run -d -p 80:8080 -v /Users/sergey.titov/Documents/work/jbr/overcoming/app/database/:/app/database/ --name pyapp test:test
