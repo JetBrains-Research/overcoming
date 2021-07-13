@@ -35,3 +35,7 @@ textarea {
     height: 100px;
     box-sizing: border-box;
 }
+
+h2, p {
+    width: 700px;
+}

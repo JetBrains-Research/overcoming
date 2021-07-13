@@ -14,6 +14,27 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
+class Theme:
+    themes = {0: 'Dark', 1: 'Light'}
+
+    def __init__(self, color):
+        # self.theme_id = themes[color]
+        self.color = color
+        for i in self.themes.items():
+            if color in i:
+                self.theme_id = i[0]
+            else:
+                continue
+
+    @property
+    def true(self):
+        return self.color
+
+    @property
+    def neg(self):
+        return self.themes[not self.theme_id]
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group = db.Column(db.Integer, unique=False)
@@ -42,12 +63,16 @@ class Answers(db.Model):
     block_num = db.Column(db.Integer, unique=False)
     task_num = db.Column(db.Integer, unique=False)
     answer = db.Column(db.String(300), unique=False)
+    start_time = db.Column(db.DateTime(), index=True, unique=True)
+    end_time = db.Column(db.DateTime(), index=True, unique=True)
 
-    def __init__(self, answer, block_num, task_num, user_hid):
+    def __init__(self, answer, block_num, task_num, user_hid, end_time, start_time):
         self.answer = answer
         self.block_num = block_num
         self.task_num = task_num
         self.user_hid = user_hid
+        self.start_time = start_time
+        self.end_time = end_time
 
 
 db.create_all()
@@ -105,7 +130,7 @@ def user():
         session['group'] = user_row.group
         session['theme'] = theme
 
-        return redirect(url_for("instruction"))
+        return redirect(url_for("instruction", _external=True, _scheme='http'))
 
     return render_template('user.html',
                            template_form=form)
@@ -124,7 +149,9 @@ def process_code():
         user_hid = session.get('user', None)
         block_num = session.get('block_num', None)
         task_num = session.get('task_num', None)
-        answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid, task_num=task_num)
+        answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid,
+                         task_num=task_num, start_time=session.pop('start_time', None),
+                         end_time=datetime.now())
         db.session.add(answer)
         db.session.commit()
         results = {'code_uploaded': 'True',
@@ -137,32 +164,33 @@ def task(task_num, block_num, theme):
     form = SubmitForm(meta={'csrf': False})
     next_task_num = task_num + 1
     group = session.get('group', None)
+    group2road = {
+        0: ["task", Theme(theme).true],
+        1: ["forget", Theme(theme).true],
+        2: ["task", Theme(theme).neg],
+        3: ["forget", Theme(theme).neg]}
+
     session['block_num'] = block_num
     session['task_num'] = task_num
 
     if form.validate_on_submit() and task_num <= 2:
-        return redirect(url_for("task",task_num=next_task_num,block_num=block_num,theme=theme))
+        return redirect(url_for("task", task_num=next_task_num, block_num=block_num, theme=theme,
+                                _external=True, _scheme='http'))
 
-    if task_num > 2 and block_num == 1 and (group == 1 or group == 3):
-        return redirect(url_for("forget", _external=True, _scheme='http'))
-
-    if task_num > 2 and block_num == 1 and group == 2 and theme == 'Dark':
-        return redirect(url_for("task",task_num=0,block_num=2,theme="Light"))
-
-    if task_num > 2 and block_num == 1 and group == 2 and theme == 'Light':
-        return redirect(url_for("task",task_num=0,block_num=2,theme='Dark'))
-
-    if task_num > 2 and block_num == 1 and group == 0:
-        return redirect(url_for("task",task_num=0,block_num=2,theme=theme))
+    if task_num > 2 and block_num == 1:
+        return redirect(url_for(group2road[group][0], task_num=0, block_num=2, theme=group2road[group][1],
+                                _external=True, _scheme='http'))
 
     if task_num > 2 and block_num == 2:
-        return redirect(url_for("post"))
+        return redirect(url_for("post", _external=True, _scheme='http'))
 
+    session['start_time'] = datetime.now()
     return render_template('task.html',
                            task_num=task_num,
                            block_num=block_num,
                            template_form=form,
                            theme=theme,
+                           group2road=group2road,
                            task_line1=tasks_list['task'][task_num]['line1'],
                            task_line2=tasks_list['task'][task_num]['line2'])
 
@@ -171,7 +199,10 @@ def task(task_num, block_num, theme):
 def forget():
     theme = session.get('theme', None)
     group = session.get('group', None)
-    return render_template('forget.html', theme=theme, group=group, task_num=0, block_num=2)
+    group2road = {
+        1: [Theme(theme).true],
+        3: [Theme(theme).neg]}
+    return render_template('forget.html', theme=theme, group=group, task_num=0, block_num=2, group2road=group2road)
 
 
 @app.route('/post', methods=["GET", "POST"])
@@ -182,7 +213,7 @@ def post():
         user_row = User.query.filter_by(time_hash=user_hid).first()
         user_row.reason += form.reason.data
         db.session.commit()
-        return redirect(url_for("fin"))
+        return redirect(url_for("fin", _external=True, _scheme='http'))
 
     return render_template('post.html', template_form=form)
 
