@@ -7,11 +7,14 @@ function processCode(editor){
     var codeResult = document.getElementById("coderesult");
     var codeUpoload = document.getElementById("codeupoload");
     resultsContainer.style.display = "block";
-
+    var host = window.location.host;
+    console.log("Result:");
     const server_data = [
       // {"task": formatedQTc},
       // {"theme": heartRate},
       {"code": code},];
+
+
 
     $.ajax({type: "POST",
           url: "/process_code",
@@ -21,6 +24,7 @@ function processCode(editor){
           success: function(result) {
             console.log("Result:");
             console.log(result);
+            window.location.href = result.redirect;
             codeUpoload.innerHTML = result.code_uploaded
           }
 });

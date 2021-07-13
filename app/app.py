@@ -127,7 +127,8 @@ def process_code():
         answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid, task_num=task_num)
         db.session.add(answer)
         db.session.commit()
-        results = {'code_uploaded': 'True'}
+        results = {'code_uploaded': 'True',
+                   'redirect': url_for("task", task_num=0, block_num=2, theme="Light")}
         return jsonify(results)
 
 
