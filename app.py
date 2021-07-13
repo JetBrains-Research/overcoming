@@ -14,6 +14,27 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
+class Theme:
+    themes = {0: 'Dark', 1: 'Light'}
+
+    def __init__(self, color):
+        # self.theme_id = themes[color]
+        self.color = color
+        for i in self.themes.items():
+            if color in i:
+                self.theme_id = i[0]
+            else:
+                continue
+
+    @property
+    def true(self):
+        return self.color
+
+    @property
+    def neg(self):
+        return self.themes[not self.theme_id]
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group = db.Column(db.Integer, unique=False)
@@ -142,6 +163,12 @@ def task(task_num, block_num, theme):
     form = SubmitForm(meta={'csrf': False})
     next_task_num = task_num + 1
     group = session.get('group', None)
+    group2road = {
+        0: ["task", Theme(theme).true],
+        1: ["forget", Theme(theme).true],
+        2: ["task", Theme(theme).neg],
+        3: ["forget", Theme(theme).neg]}
+
     session['block_num'] = block_num
     session['task_num'] = task_num
 
@@ -149,19 +176,8 @@ def task(task_num, block_num, theme):
         return redirect(url_for("task", task_num=next_task_num, block_num=block_num, theme=theme,
                                 _external=True, _scheme='http'))
 
-    if task_num > 2 and block_num == 1 and (group == 1 or group == 3):
-        return redirect(url_for("forget", _external=True, _scheme='http'))
-
-    if task_num > 2 and block_num == 1 and group == 2 and theme == 'Dark':
-        return redirect(url_for("task", task_num=0, block_num=2, theme="Light",
-                                _external=True, _scheme='http'))
-
-    if task_num > 2 and block_num == 1 and group == 2 and theme == 'Light':
-        return redirect(url_for("task", task_num=0, block_num=2, theme='Dark',
-                                _external=True, _scheme='http'))
-
-    if task_num > 2 and block_num == 1 and group == 0:
-        return redirect(url_for("task", task_num=0, block_num=2, theme=theme,
+    if task_num > 2 and block_num == 1:
+        return redirect(url_for(group2road[group][0], task_num=0, block_num=2, theme=group2road[group][1],
                                 _external=True, _scheme='http'))
 
     if task_num > 2 and block_num == 2:
@@ -173,6 +189,7 @@ def task(task_num, block_num, theme):
                            block_num=block_num,
                            template_form=form,
                            theme=theme,
+                           group2road=group2road,
                            task_line1=tasks_list['task'][task_num]['line1'],
                            task_line2=tasks_list['task'][task_num]['line2'])
 
@@ -181,7 +198,10 @@ def task(task_num, block_num, theme):
 def forget():
     theme = session.get('theme', None)
     group = session.get('group', None)
-    return render_template('forget.html', theme=theme, group=group, task_num=0, block_num=2)
+    group2road = {
+        1: [Theme(theme).true],
+        3: [Theme(theme).neg]}
+    return render_template('forget.html', theme=theme, group=group, task_num=0, block_num=2, group2road=group2road)
 
 
 @app.route('/post', methods=["GET", "POST"])
