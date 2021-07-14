@@ -52,10 +52,27 @@ class User(db.Model):
         self.time = time
         self.time_hash = hash(time)
 
-    def set_group(self, id):
-        self.group = id % 4 if (id % 4 >= 1) & (id % 4 < 4) else 0
+    def set_group(self, group_id):
         # 0 - control, 1 - forget, 2 - change, 3 - forget+change
+        self.group = group_id % 4 if (group_id % 4 >= 1) & (group_id % 4 < 4) else 0
 
+    def set_path(self):
+        theme = Theme(self.theme)
+        group = self.group
+
+        group2path = {
+            0: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, None, theme.true),
+                (0, 'task', theme.true), (1, 'task', theme.true), (1, 'post', theme.true)],
+            1: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, 'forget', theme.true),
+                (0, 'task', theme.true), (1, 'task', theme.true), (1, 'post', theme.true)],
+            2: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, None, theme.true),
+                (0, 'task', theme.neg), (1, 'task', theme.neg), (1, 'post', theme.neg)],
+            3: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, 'forget', theme.true),
+                (0, 'task', theme.neg), (1, 'task', theme.neg), (1, 'post', theme.neg)],
+        }
+
+        self.path = group2path[group]
+        print(self.path)
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -109,26 +126,26 @@ def user():
     if form.validate_on_submit():
         username = request.form.get('username', False)
         theme = request.form.get('theme', False)
-        time = datetime.now()
-        new_user = User(username=username, theme=theme, reason="", time=time)
-        db.session.add(new_user)
 
-        session['user'] = hash(time)
-        user_hid = session.get('user', None)
-        user_row = User.query.filter_by(time_hash=user_hid).first()
+        new_user = User(username=username, theme=theme, reason="", time=datetime.now())
+
+        user_row = User.query.count()
         name2group = {"control": 0, "forget": 1, "change": 2, "all": 3}
-
-        if user_row.username in name2group.keys():
-            group = name2group[user_row.username]
+        if new_user.username in name2group.keys():
+            group = name2group[new_user.username]
         else:
-            group = user_row.id
+            group = user_row % 4
 
-        db.session.refresh(new_user)
         new_user.set_group(group)
+        new_user.set_path()
+
+        db.session.add(new_user)
         db.session.commit()
 
-        session['group'] = user_row.group
-        session['theme'] = theme
+        session['user'] = new_user.time_hash
+        session['group'] = new_user.group
+        session['theme'] = new_user.theme
+        session['path'] = new_user.path
 
         return redirect(url_for("instruction", _external=True, _scheme='http'))
 
@@ -138,8 +155,9 @@ def user():
 
 @app.route('/instruction')
 def instruction():
+    session['step_id'] = 0
     theme = session.get('theme', None)
-    return render_template('instruction.html', theme=theme)
+    return render_template('instruction.html', theme=theme, page_id=session['step_id'])
 
 
 @app.route('/process_code', methods=['POST', 'GET'])
@@ -154,55 +172,84 @@ def process_code():
                          end_time=datetime.now())
         db.session.add(answer)
         db.session.commit()
+
+        m = page_managment()
+        url = m['get_next_page'](session['step_id'])
+        print(url)
         results = {'code_uploaded': 'True',
-                   'redirect': url_for("task", task_num=0, block_num=2, theme="Light")}
+                   'redirect': url}
         return jsonify(results)
 
 
-@app.route('/task/<int:task_num>/<int:block_num>/<string:theme>', methods=["GET", "POST"])
-def task(task_num, block_num, theme):
-    form = SubmitForm(meta={'csrf': False})
-    next_task_num = task_num + 1
-    group = session.get('group', None)
-    group2road = {
-        0: ["task", Theme(theme).true],
-        1: ["forget", Theme(theme).true],
-        2: ["task", Theme(theme).neg],
-        3: ["forget", Theme(theme).neg]}
+@app.context_processor
+def page_managment():
+    def get_next_page(page_id):
+        path = session['path']
+        #page_id = session['step_id']
+        print(session['step_id'])
+        current, next_page = path[page_id], path[page_id+1]
+        print(current, next_page)
+        #if current[1] in ["task", 'forget']:
+        if next_page[1] is None:
+            session['step_id'] += 1
+            next_page = path[session['step_id'] + 1]
 
-    session['block_num'] = block_num
-    session['task_num'] = task_num
+        # agrs & kwargs
+        # using **
+        # return url_for(**next_page, _external=True, _scheme='http') where next_page is dict {'endpoint':'taks',
+        #                                                                                      'task_num':0,
+        #                                                                                      'theme':Dark}
 
-    if form.validate_on_submit() and task_num <= 2:
-        return redirect(url_for("task", task_num=next_task_num, block_num=block_num, theme=theme,
-                                _external=True, _scheme='http'))
+        return url_for(endpoint=next_page[1], task_num=next_page[0], theme=next_page[2], _external=True, _scheme='http')
+        # elif current[1] == 'post':
+        #     return url_for("post", _external=True, _scheme='http')
 
-    if task_num > 2 and block_num == 1:
-        return redirect(url_for(group2road[group][0], task_num=0, block_num=2, theme=group2road[group][1],
-                                _external=True, _scheme='http'))
+    return {'get_next_page': get_next_page}
 
-    if task_num > 2 and block_num == 2:
-        return redirect(url_for("post", _external=True, _scheme='http'))
+
+@app.route('/task/<int:task_num>/<string:theme>', methods=["GET", "POST"])
+def task(task_num, theme):
+    #form = SubmitForm(meta={'csrf': False})
+    session['step_id'] += 1
+    #path = session['path']
+    #page = path[session['step_id']]
+
+    #next_task_num = task_num + 1
+    #group = session.get('group', None)
+
+
+    #session['block_num'] = block_num
+    #session['task_num'] = task_num
+
+    #next_page_url = get_next_page(session['step_id'])
+
+
+    # if form.validate_on_submit() and task_num <= 2:
+    #     return redirect(url_for("task", task_num=next_task_num, block_num=block_num, theme=theme,
+    #                             _external=True, _scheme='http'))
+    #
+    # if task_num > 2 and block_num == 1:
+    #     return redirect(url_for(group2road[group][0], task_num=0, block_num=2, theme=group2road[group][1],
+    #                             _external=True, _scheme='http'))
+    #
+    # if task_num > 2 and block_num == 2:
+    #     return redirect(url_for("post", _external=True, _scheme='http'))
 
     session['start_time'] = datetime.now()
     return render_template('task.html',
                            task_num=task_num,
-                           block_num=block_num,
-                           template_form=form,
+                           # block_num=block_num,
+                           #template_form=form,
                            theme=theme,
-                           group2road=group2road,
+                           # group2road=group2road,
                            task_line1=tasks_list['task'][task_num]['line1'],
                            task_line2=tasks_list['task'][task_num]['line2'])
 
 
-@app.route('/forget')
-def forget():
-    theme = session.get('theme', None)
-    group = session.get('group', None)
-    group2road = {
-        1: [Theme(theme).true],
-        3: [Theme(theme).neg]}
-    return render_template('forget.html', theme=theme, group=group, task_num=0, block_num=2, group2road=group2road)
+@app.route('/forget/<int:task_num>/<string:theme>')
+def forget(task_num, theme):
+    session['step_id'] += 1
+    return render_template('forget.html', theme=theme, page_id=session['step_id'])
 
 
 @app.route('/post', methods=["GET", "POST"])

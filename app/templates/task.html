@@ -30,19 +30,19 @@ const editor = ace.edit("editor");
 <br>
 <input type="submit" name="next" value="Next" onclick="processCode(editor);">
 
-<div id="results" style="display: none">
-<h2>Results</h2>
-<p> Code is submitted <span id="codeupoload"></span>
-
-<br>
-    <form action="{{ url_for('task', task_num=task_num, block_num=block_num, theme=theme) }}" method="POST">
-    {{ template_form.hidden_tag() }}
-    <p>
-        {{template_form.submit()}}
-    </p>
-</form>
-
-</div>
+{#<div id="results" style="display: none">#}
+{#<h2>Results</h2>#}
+{#<p> Code is submitted <span id="codeupoload"></span>#}
+{##}
+{#<br>#}
+{#    <form action="{{ get_next_page(page_id) }}" method="POST">#}
+{#    {{ template_form.hidden_tag() }}#}
+{#    <p>#}
+{#        {{template_form.submit()}}#}
+{#    </p>#}
+{#</form>#}
+{##}
+{#</div>#}
 
 </body>
 </html>

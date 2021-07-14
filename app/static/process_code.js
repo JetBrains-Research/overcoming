@@ -6,7 +6,7 @@ function processCode(editor){
     var resultsContainer = document.getElementById("results");
     var codeResult = document.getElementById("coderesult");
     var codeUpoload = document.getElementById("codeupoload");
-    resultsContainer.style.display = "block";
+    // resultsContainer.style.display = "block";
     var host = window.location.host;
     console.log("Result:");
     const server_data = [
@@ -17,16 +17,16 @@ function processCode(editor){
 
 
     $.ajax({type: "POST",
-          url: "/process_code",
-          data: JSON.stringify(server_data),
-          contentType: "application/json",
-          dataType: 'json',
-          success: function(result) {
-            console.log("Result:");
-            console.log(result);
-            window.location.href = result.redirect;
-            codeUpoload.innerHTML = result.code_uploaded
-          }
+              url: "/process_code",
+              data: JSON.stringify(server_data),
+              contentType: "application/json",
+              dataType: 'json',
+              success: function(result) {
+                console.log("Result:");
+                console.log(result);
+                window.location.href = result.redirect;
+                codeUpoload.innerHTML = result.code_uploaded
+              }
 });
 }
 

@@ -17,7 +17,7 @@
 <br><br>
     Нажмите «Дальше», когда будете готовы
 </p>
-<form action="{{ url_for("task", task_num=0, block_num=2, theme=group2road[group][0]) }}" >
+<form action="{{ get_next_page(page_id) }}" >
     <input type="submit" value="Дальше" />
 </form>
 
