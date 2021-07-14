@@ -1,4 +1,5 @@
 from flask import Flask
+from userpath import group2path
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -60,50 +61,12 @@ class User(db.Model):
     def set_path(self):
         theme = Theme(self.theme)
         group = self.group
+        path = group2path[group]
 
-        group2path = {
-            0: [{"endpoint": "intro", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 1, "theme": theme.true},
-                {"endpoint": "task", "task_num": 2, "theme": theme.true},
-                {"endpoint": None, "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 1, "theme": theme.true},
-                {"endpoint": "task", "task_num": 2, "theme": theme.true},
-                {"endpoint": "post", "task_num": 0, "theme": theme.true}],
+        for point_id in range(len(path)):
+            path[point_id]['theme'] = theme.true if path[point_id]['theme'] else theme.neg
 
-            1: [{"endpoint": "intro", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 1, "theme": theme.true},
-                {"endpoint": "task", "task_num": 2, "theme": theme.true},
-                {"endpoint": "forget", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 1, "theme": theme.true},
-                {"endpoint": "task", "task_num": 2, "theme": theme.true},
-                {"endpoint": "post", "task_num": 0, "theme": theme.true}],
-
-            2: [{"endpoint": "intro", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 1, "theme": theme.true},
-                {"endpoint": "task", "task_num": 2, "theme": theme.true},
-                {"endpoint": None, "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.neg},
-                {"endpoint": "task", "task_num": 1, "theme": theme.neg},
-                {"endpoint": "task", "task_num": 2, "theme": theme.neg},
-                {"endpoint": "post", "task_num": 0, "theme": theme.neg}],
-
-            3: [{"endpoint": "intro", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 1, "theme": theme.true},
-                {"endpoint": "task", "task_num": 2, "theme": theme.true},
-                {"endpoint": "forget", "task_num": 0, "theme": theme.true},
-                {"endpoint": "task", "task_num": 0, "theme": theme.neg},
-                {"endpoint": "task", "task_num": 1, "theme": theme.neg},
-                {"endpoint": "task", "task_num": 2, "theme": theme.neg},
-                {"endpoint": "post", "task_num": 0, "theme": theme.neg}],
-        }
-
-        self.path = group2path[group]
+        self.path = path
 
 
 class Answers(db.Model):
