@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     {% if theme=='Dark' %}
-    <link href='/app/staticatic/dark.css' rel='stylesheet'>
+    <link href='{{url_for('static', filename='dark.css') }}' rel='stylesheet'>
     {%else%}
-    <link href='/app/staticatic/light.css' rel='stylesheet'>
+    <link href='{{url_for('static', filename='light.css') }}' rel='stylesheet'>
     {% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forget</title>
@@ -20,24 +20,5 @@
 <form action="{{ get_next_page(page_id) }}" >
     <input type="submit" value="Дальше" />
 </form>
-
-{#{% if group == 1 and theme == 'Dark' %}
-    <form action="{{ url_for("task", task_num=0, block_num=2, theme=theme) }}" >
-        <input type="submit" value="Дальше" />
-    </form>
-{% elif group == 1 and theme == 'Light'%}
-    <form action="{{ url_for("task", task_num=0, block_num=2, theme=theme) }}" >
-        <input type="submit" value="Дальше" />
-    </form>
-{% elif group == 3 and theme == 'Dark'%}
-    <form action="{{ url_for("task", task_num=0, block_num=2, theme="Light") }}" >
-        <input type="submit" value="Дальше" />
-    </form>
-{% elif group == 3 and theme == 'Light'%}
-    <form action="{{ url_for("task", task_num=0, block_num=2, theme='Dark') }}">
-        <input type="submit" value="Дальше" />
-    </form>
-{% endif %}#}
-
 </body>
 </html>

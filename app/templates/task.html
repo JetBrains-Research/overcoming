@@ -29,20 +29,5 @@ const editor = ace.edit("editor");
 </script>
 <br>
 <input type="submit" name="next" value="Next" onclick="processCode(editor);">
-
-{#<div id="results" style="display: none">#}
-{#<h2>Results</h2>#}
-{#<p> Code is submitted <span id="codeupoload"></span>#}
-{##}
-{#<br>#}
-{#    <form action="{{ get_next_page(page_id) }}" method="POST">#}
-{#    {{ template_form.hidden_tag() }}#}
-{#    <p>#}
-{#        {{template_form.submit()}}#}
-{#    </p>#}
-{#</form>#}
-{##}
-{#</div>#}
-
 </body>
 </html>

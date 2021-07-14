@@ -1,10 +1,10 @@
-from flask import Flask, request, render_template, session, redirect, url_for, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SubmitField, StringField, RadioField
 from wtforms.validators import DataRequired
-from datetime import datetime
 import json
+from datetime import datetime
+from flask import Flask, request, render_template, session, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
@@ -12,27 +12,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/myDB.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-
-
-class Theme:
-    themes = {0: 'Dark', 1: 'Light'}
-
-    def __init__(self, color):
-        # self.theme_id = themes[color]
-        self.color = color
-        for i in self.themes.items():
-            if color in i:
-                self.theme_id = i[0]
-            else:
-                continue
-
-    @property
-    def true(self):
-        return self.color
-
-    @property
-    def neg(self):
-        return self.themes[not self.theme_id]
 
 
 class User(db.Model):
@@ -61,18 +40,33 @@ class User(db.Model):
         group = self.group
 
         group2path = {
-            0: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, None, theme.true),
-                (0, 'task', theme.true), (1, 'task', theme.true), (1, 'post', theme.true)],
-            1: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, 'forget', theme.true),
-                (0, 'task', theme.true), (1, 'task', theme.true), (1, 'post', theme.true)],
-            2: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, None, theme.true),
-                (0, 'task', theme.neg), (1, 'task', theme.neg), (1, 'post', theme.neg)],
-            3: [(0, 'intro', theme.true), (0, 'task', theme.true), (1, 'task', theme.true), (0, 'forget', theme.true),
-                (0, 'task', theme.neg), (1, 'task', theme.neg), (1, 'post', theme.neg)],
+            0: [('intro', 0, theme.true),
+                ('task', 0, theme.true), ('task', 1, theme.true), ('task', 2, theme.true),
+                (None, 0, theme.true),
+                ('task', 0,  theme.true), ('task', 1, theme.true), ('task', 2, theme.true),
+                ('post', 0,  theme.true)],
+
+            1: [('intro', 0, theme.true),
+                ('task', 0, theme.true), ('task', 1, theme.true), ('task', 2, theme.true),
+                ('forget', 0, theme.true),
+                ('task', 0, theme.true), ('task', 1, theme.true), ('task', 2, theme.true),
+                ('post', 0, theme.true)],
+
+            2: [('intro', 0, theme.true),
+                ('task', 0, theme.true), ('task', 1, theme.true), ('task', 2, theme.true),
+                (None, 0, theme.true),
+                ('task', 0, theme.neg), ('task', 1, theme.neg), ('task', 2, theme.neg),
+                ('post', 0, theme.neg)],
+
+            3: [('intro', 0, theme.true),
+                ('task', 0, theme.true), ('task', 1, theme.true), ('task', 2, theme.true),
+                ('forget', 0,  theme.true),
+                ('task', 0, theme.neg), ('task', 1, theme.neg), ('task', 2, theme.neg),
+                ('post', 0, theme.neg)],
         }
 
         self.path = group2path[group]
-        print(self.path)
+
 
 class Answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -92,15 +86,25 @@ class Answers(db.Model):
         self.end_time = end_time
 
 
-db.create_all()
+class Theme:
+    themes = {0: 'Dark', 1: 'Light'}
 
+    def __init__(self, color):
+        # self.theme_id = themes[color]
+        self.color = color
+        for i in self.themes.items():
+            if color in i:
+                self.theme_id = i[0]
+            else:
+                continue
 
-class SubmitForm(FlaskForm):
-    submit = SubmitField("Submit")
+    @property
+    def true(self):
+        return self.color
 
-
-with open('tasks.json') as tasks_json:
-    tasks_list = json.load(tasks_json)
+    @property
+    def neg(self):
+        return self.themes[not self.theme_id]
 
 
 class UserForm(FlaskForm):
@@ -157,6 +161,11 @@ def user():
 def instruction():
     session['step_id'] = 0
     theme = session.get('theme', None)
+
+    with open('tasks.json') as tasks_json:
+        tasks_list = json.load(tasks_json)
+        session['tasks_list'] = tasks_list
+
     return render_template('instruction.html', theme=theme, page_id=session['step_id'])
 
 
@@ -165,8 +174,13 @@ def process_code():
     if request.method == "POST":
         code = request.get_json()
         user_hid = session.get('user', None)
-        block_num = session.get('block_num', None)
         task_num = session.get('task_num', None)
+
+        if session['step_id'] <= 3:
+            block_num = 1
+        else:
+            block_num = 2
+
         answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid,
                          task_num=task_num, start_time=session.pop('start_time', None),
                          end_time=datetime.now())
@@ -185,69 +199,32 @@ def process_code():
 def page_managment():
     def get_next_page(page_id):
         path = session['path']
-        #page_id = session['step_id']
-        print(session['step_id'])
-        current, next_page = path[page_id], path[page_id+1]
-        print(current, next_page)
-        #if current[1] in ["task", 'forget']:
-        if next_page[1] is None:
+        next_page = path[page_id+1]
+        if next_page[0] is None:
             session['step_id'] += 1
             next_page = path[session['step_id'] + 1]
 
-        # agrs & kwargs
-        # using **
-        # return url_for(**next_page, _external=True, _scheme='http') where next_page is dict {'endpoint':'taks',
-        #                                                                                      'task_num':0,
-        #                                                                                      'theme':Dark}
-
-        return url_for(endpoint=next_page[1], task_num=next_page[0], theme=next_page[2], _external=True, _scheme='http')
-        # elif current[1] == 'post':
-        #     return url_for("post", _external=True, _scheme='http')
-
+        return url_for(endpoint=next_page[0], task_num=next_page[1], theme=next_page[2],
+                       _external=True, _scheme='http')
     return {'get_next_page': get_next_page}
 
 
 @app.route('/task/<int:task_num>/<string:theme>', methods=["GET", "POST"])
 def task(task_num, theme):
-    #form = SubmitForm(meta={'csrf': False})
     session['step_id'] += 1
-    #path = session['path']
-    #page = path[session['step_id']]
-
-    #next_task_num = task_num + 1
-    #group = session.get('group', None)
-
-
-    #session['block_num'] = block_num
-    #session['task_num'] = task_num
-
-    #next_page_url = get_next_page(session['step_id'])
-
-
-    # if form.validate_on_submit() and task_num <= 2:
-    #     return redirect(url_for("task", task_num=next_task_num, block_num=block_num, theme=theme,
-    #                             _external=True, _scheme='http'))
-    #
-    # if task_num > 2 and block_num == 1:
-    #     return redirect(url_for(group2road[group][0], task_num=0, block_num=2, theme=group2road[group][1],
-    #                             _external=True, _scheme='http'))
-    #
-    # if task_num > 2 and block_num == 2:
-    #     return redirect(url_for("post", _external=True, _scheme='http'))
-
+    tasks_list = session.get('tasks_list', None)
     session['start_time'] = datetime.now()
+    session['task_num'] = task_num
+
     return render_template('task.html',
                            task_num=task_num,
-                           # block_num=block_num,
-                           #template_form=form,
                            theme=theme,
-                           # group2road=group2road,
                            task_line1=tasks_list['task'][task_num]['line1'],
                            task_line2=tasks_list['task'][task_num]['line2'])
 
 
-@app.route('/forget/<int:task_num>/<string:theme>')
-def forget(task_num, theme):
+@app.route('/forget/<string:theme>')
+def forget(theme):
     session['step_id'] += 1
     return render_template('forget.html', theme=theme, page_id=session['step_id'])
 
@@ -271,7 +248,9 @@ def fin():
 
 
 if __name__ == "__main__":
+    db.create_all()
     app.run(host="0.0.0.0", port=8080, debug=True)
 
 # docker build -t test:test .
-# docker run -d -p 80:8080 -v /Users/sergey.titov/Documents/work/jbr/overcoming/app/database/:/app/database/ --name pyapp test:test
+# docker run -d -p 80:8080 -v /Users/sergey.titov/Documents/work/jbr/overcoming/app/database/:/app/database/
+# --name pyapp test:test
