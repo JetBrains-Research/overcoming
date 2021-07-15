@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    {% if theme=='Dark' %}
+    <link href='../static/dark.css' rel='stylesheet'>
+    {%else%}
+    <link href='../static/light.css' rel='stylesheet'>
+    {% endif %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instruction</title>
+</head>
+<body>
+<h2>
+    Спасибо, что ответили на вопросы нашей анкеты!
+</h2>
+<p>
+    В следующие 20 минут вам предстоит решить набор задач на языке python.
+    <br><br>
+    В рамках нашего исследования мы не будем проверять корректность работы кода, однако нам важно,
+    чтобы решение задачи было максимально эффективным.
+    Пожалуйста, используйте <b>наиболее</b> эффективный способ решения задачи.
+<br><br>
+    Когда решение будет готово, нажмите «Дальше», чтобы перейти к следующей задаче.
+<br><br>
+    Если вы поняли инструкцию и готовы продолжать, пожалуйста, нажмите «Дальше».
+</p>
+<form action="{{ get_next_page(page_id) }}">
+    <input type="submit" value="Дальше" />
+</form>
+</body>
+</html>
