@@ -11,15 +11,15 @@ app.app_context().push()
 
 
 class UserForm(FlaskForm):
-    theme_categories = [("Light", "Light"), ("Dark", "Dark")]
+    theme_categories = [("Light", "Светлая"), ("Dark", "Темная")]
     username = StringField("User name", validators=[DataRequired()])
     theme = RadioField("Your usual theme", choices=theme_categories)
-    submit = SubmitField("Submit")
+    submit = SubmitField("Дальше")
 
 
 class PostForm(FlaskForm):
     reason = TextAreaField("Reason", validators=[DataRequired()])
-    submit = SubmitField("Submit")
+    submit = SubmitField("Дальше")
 
 
 @app.route('/')
