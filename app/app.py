@@ -79,9 +79,11 @@ def process_code():
         task_num = session.get('task_num', None)
 
         if session['step_id'] <= 3:
-            block_num = 1
+            block_num = 0
         else:
-            block_num = 2
+            block_num = 1
+
+        session['block_num'] = block_num
 
         answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid,
                          task_num=task_num, start_time=session.pop('start_time', None),
@@ -115,11 +117,13 @@ def task(task_num, theme):
     tasks_list = session.get('tasks_list', None)
     session['start_time'] = datetime.now()
     session['task_num'] = task_num
+    block_num = session.get('block_num', None)
+
     return render_template('task.html',
                            task_num=task_num,
                            theme=theme,
-                           task_line1=tasks_list['task'][task_num]['line1'],
-                           task_line2=tasks_list['task'][task_num]['line2'])
+                           task_line1=tasks_list['task'][block_num][task_num]['line1'],
+                           task_line2=tasks_list['task'][block_num][task_num]['line2'])
 
 
 @app.route('/forget/<string:theme>')
