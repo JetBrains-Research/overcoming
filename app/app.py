@@ -117,7 +117,7 @@ def task(task_num, theme):
     tasks_list = session.get('tasks_list', None)
     session['start_time'] = datetime.now()
     session['task_num'] = task_num
-    block_num = session.get('block_num', None)
+    block_num = session.get('block_num', 0)
 
     return render_template('task.html',
                            task_num=task_num,
