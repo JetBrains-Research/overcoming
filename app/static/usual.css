@@ -39,3 +39,8 @@ textarea {
 h2, p {
     width: 600px;
 }
+
+#timeLeft {
+    font-size: 10px;
+    font-style: italic;
+}

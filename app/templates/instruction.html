@@ -9,6 +9,7 @@
     {% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instruction</title>
+    <script src="{{url_for('static', filename='timer.js') }}"></script>
 </head>
 <body>
 <h2>
@@ -23,10 +24,11 @@
 <br><br>
     Когда решение будет готово, нажмите «Дальше», чтобы перейти к следующей задаче.
 <br><br>
-    Если вы поняли инструкцию и готовы продолжать, пожалуйста, нажмите «Дальше».
+    Если вы поняли инструкцию и готовы продолжать, пожалуйста, нажмите «Дальше», когда кнопка станет активна.
 </p>
+<p id="timeLeft">Кнопка активируется через 20 секунд</p>
 <form action="{{ get_next_page(page_id) }}">
-    <input type="submit" value="Дальше" />
+    <input type="submit" id="submitButton" disabled="disabled" value="Дальше" />
 </form>
 </body>
 </html>

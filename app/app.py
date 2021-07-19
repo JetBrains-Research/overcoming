@@ -6,6 +6,7 @@ from wtforms import TextAreaField, SubmitField, StringField, RadioField
 from wtforms.validators import DataRequired
 from models import create_app, db, User, Answers
 
+
 app = create_app()
 app.app_context().push()
 
@@ -130,6 +131,12 @@ def task(task_num, theme):
 def forget(theme):
     session['step_id'] += 1
     return render_template('forget.html', theme=theme, page_id=session['step_id'])
+
+
+@app.route('/hold/<string:theme>')
+def hold(theme):
+    session['step_id'] += 1
+    return render_template('hold.html', theme=theme, page_id=session['step_id'])
 
 
 @app.route('/post', methods=["GET", "POST"])
