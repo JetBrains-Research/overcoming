@@ -38,11 +38,11 @@ def user():
         new_user = User(username=username, theme=theme, reason="", time=datetime.now())
 
         user_row = User.query.count()
-        name2group = {"control": 0, "forget": 1, "change": 2, "all": 3}
+        name2group = {"control": 0, "change": 1, "all": 2}
         if new_user.username in name2group.keys():
             group = name2group[new_user.username]
         else:
-            group = user_row % 4
+            group = user_row % 3
 
         new_user.set_group(group)
         new_user.set_path()
@@ -60,6 +60,18 @@ def user():
                            template_form=form)
 
 
+@app.context_processor
+def page_managment():
+    def get_next_page(page_id):
+        path = session['path']
+        next_page = path[page_id+1]
+        if next_page['endpoint'] is None:
+            session['step_id'] += 1
+            next_page = path[session['step_id'] + 1]
+        return url_for(**next_page, _external=True, _scheme='http')
+    return {'get_next_page': get_next_page}
+
+
 @app.route('/instruction')
 def instruction():
     session['step_id'] = 0
@@ -72,19 +84,32 @@ def instruction():
     return render_template('instruction.html', theme=theme, page_id=session['step_id'])
 
 
+@app.route('/task/<int:task_num>/<string:theme>', methods=["GET", "POST"])
+def task(task_num, theme):
+    session['step_id'] += 1
+    tasks_list = session.get('tasks_list', None)
+    session['start_time'] = datetime.now()
+    session['task_num'] = task_num
+
+    if session['step_id'] <= 4:
+        block_num = 0
+    else:
+        block_num = 1
+    session['block_num'] = block_num
+
+    return render_template('task.html',
+                           task_num=task_num,
+                           theme=theme,
+                           task_line1=tasks_list['task'][block_num][task_num]['line1'])
+
+
 @app.route('/process_code', methods=['POST', 'GET'])
 def process_code():
     if request.method == "POST":
         code = request.get_json()
         user_hid = session.get('user', None)
         task_num = session.get('task_num', None)
-
-        if session['step_id'] <= 3:
-            block_num = 0
-        else:
-            block_num = 1
-
-        session['block_num'] = block_num
+        block_num = session.get('block_num', 0)
 
         answer = Answers(answer=code[0]['code'], block_num=block_num, user_hid=user_hid,
                          task_num=task_num, start_time=session.pop('start_time', None),
@@ -98,33 +123,6 @@ def process_code():
         results = {'code_uploaded': 'True',
                    'redirect': url}
         return jsonify(results)
-
-
-@app.context_processor
-def page_managment():
-    def get_next_page(page_id):
-        path = session['path']
-        next_page = path[page_id+1]
-        if next_page['endpoint'] is None:
-            session['step_id'] += 1
-            next_page = path[session['step_id'] + 1]
-        return url_for(**next_page, _external=True, _scheme='http')
-    return {'get_next_page': get_next_page}
-
-
-@app.route('/task/<int:task_num>/<string:theme>', methods=["GET", "POST"])
-def task(task_num, theme):
-    session['step_id'] += 1
-    tasks_list = session.get('tasks_list', None)
-    session['start_time'] = datetime.now()
-    session['task_num'] = task_num
-    block_num = session.get('block_num', 0)
-
-    return render_template('task.html',
-                           task_num=task_num,
-                           theme=theme,
-                           task_line1=tasks_list['task'][block_num][task_num]['line1'],
-                           task_line2=tasks_list['task'][block_num][task_num]['line2'])
 
 
 @app.route('/forget/<string:theme>')
