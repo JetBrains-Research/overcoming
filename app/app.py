@@ -6,7 +6,6 @@ from wtforms import TextAreaField, SubmitField, StringField, RadioField
 from wtforms.validators import DataRequired
 from models import create_app, db, User, Answers
 
-
 app = create_app()
 app.app_context().push()
 
@@ -65,9 +64,6 @@ def page_managment():
     def get_next_page(page_id):
         path = session['path']
         next_page = path[page_id+1]
-        if next_page['endpoint'] is None:
-            session['step_id'] += 1
-            next_page = path[session['step_id'] + 1]
         return url_for(**next_page, _external=True, _scheme='http')
     return {'get_next_page': get_next_page}
 
@@ -100,7 +96,8 @@ def task(task_num, theme):
     return render_template('task.html',
                            task_num=task_num,
                            theme=theme,
-                           task_line1=tasks_list['task'][block_num][task_num]['line1'])
+                           task_line1=tasks_list['task'][block_num][task_num]['line1'],
+                           task_line2=tasks_list['task'][block_num][task_num]['line2'])
 
 
 @app.route('/process_code', methods=['POST', 'GET'])
