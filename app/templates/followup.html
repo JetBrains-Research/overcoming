@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link href='../static/usual.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Follow Up</title>
+</head>
+<body>
+<h2>
+    Несколько вопросов о смене темы.
+</h2>
+<p>
+    Пожалуйста, оцените степень своего согласия или несогласия с каждым из утверждений <br> по шкале от 0 до 5, где:<br>
+<blockquote>
+    0 — полностью не согласен(-на);<br>
+    1 — не согласен(-на);<br>
+    2 — скорее не согласен(-на), чем согласен(-на);<br>
+    3 — скорее согласен(-на), чем не согласен(-на);<br>
+    4 — согласен(-на);<br>
+    5 — полностью согласен(-на).
+</blockquote>
+</p>
+
+
+<form action="/follow" method="POST">
+    {{ template_form.hidden_tag() }}
+    <p>
+        <b>Смена фона помогла мне решить задачи второго этапа эффективней.</b>
+    <br>
+        <tr>
+        {% for btn in template_form.how_helpful %}
+            <td>{{btn}}</td>
+            <th>{{btn.label}}. </th>
+        {% endfor %}
+        </tr>
+    </p>
+
+    <p>
+    <b>Мне было комфортно работать на сменившемся фоне.</b>
+    <br>
+    <tr>
+        {% for btn in template_form.how_comfortable %}
+            <td>{{btn}}</td>
+            <th>{{btn.label}}. </th>
+        {% endfor %}
+    </tr>
+   </p>
+    <p>
+        {{template_form.submit()}}
+    </p>
+</form>
+
+</body>
+</html>

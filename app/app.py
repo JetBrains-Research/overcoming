@@ -22,6 +22,13 @@ class PostForm(FlaskForm):
     submit = SubmitField("Дальше")
 
 
+class FollowupForm(FlaskForm):
+    scale_points = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]
+    how_helpful = RadioField("Helpfulness", choices=scale_points, validators=[DataRequired()])
+    how_comfortable = RadioField("Comfort", choices=scale_points, validators=[DataRequired()])
+    submit = SubmitField("Дальше")
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -34,7 +41,7 @@ def user():
         username = request.form.get('username', False)
         theme = request.form.get('theme', False)
 
-        new_user = User(username=username, theme=theme, reason="", time=datetime.now())
+        new_user = User(username=username, theme=theme, reason="", how_helpful="", how_comfortable="", time=datetime.now())
 
         user_row = User.query.count()
         name2group = {"control": 0, "change": 1, "all": 2}
@@ -142,8 +149,26 @@ def post():
         user_row = User.query.filter_by(time_hash=user_hid).first()
         user_row.reason += form.reason.data
         db.session.commit()
-        return redirect(url_for("fin", _external=True, _scheme='http'))
+        if user_row.group == 0:
+            return redirect(url_for("fin", _external=True, _scheme='http'))
+        else:
+            return redirect(url_for("follow", _external=True, _scheme='http'))
+
     return render_template('post.html', template_form=form)
+
+
+@app.route('/follow', methods=["GET", "POST"])
+def follow():
+    session['step_id'] += 1
+    form = FollowupForm(meta={'csrf': False})
+    if form.validate_on_submit():
+        user_hid = session.get('user', None)
+        user_row = User.query.filter_by(time_hash=user_hid).first()
+        user_row.how_helpful += form.how_helpful.data
+        user_row.how_comfortable += form.how_comfortable.data
+        db.session.commit()
+        return redirect(url_for("fin", _external=True, _scheme='http'))
+    return render_template('followup.html', template_form=form)
 
 
 @app.route('/fin')

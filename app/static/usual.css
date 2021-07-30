@@ -44,3 +44,5 @@ h2, p {
     font-size: 10px;
     font-style: italic;
 }
+
+label { font-size: 14px; }

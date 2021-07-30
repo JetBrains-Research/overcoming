@@ -45,13 +45,17 @@ class User(db.Model):
     time_hash = db.Column(db.String(128), unique=True)
     theme = db.Column(db.String(64), unique=False)
     reason = db.Column(db.String(500), index=True, unique=False)
+    how_helpful = db.Column(db.Integer, unique=False)
+    how_comfortable = db.Column(db.Integer, unique=False)
     answers = db.relationship('Answers', backref='user', lazy='dynamic')
 
-    def __init__(self, username, theme, reason, time):
+    def __init__(self, username, theme, reason, how_helpful, how_comfortable, time):
         self.username = username
         self.theme = theme
         self.reason = reason
         self.time = time
+        self.how_comfortable = how_comfortable
+        self.how_helpful = how_helpful
         self.time_hash = hash(time)
 
     def set_group(self, group_id):
