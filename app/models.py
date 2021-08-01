@@ -59,7 +59,7 @@ class User(db.Model):
         self.time_hash = hash(time)
 
     def set_group(self, group_id):
-        # 0 - control, 1 - forget, 2 - change, 3 - forget+change
+        # 0 - control, 1 - change, 2 - forget+change
         self.group = group_id % 4 if (group_id % 4 >= 1) & (group_id % 4 < 4) else 0
 
     def set_path(self):
