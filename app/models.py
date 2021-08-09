@@ -1,7 +1,7 @@
 from flask import Flask
-from userpath import userpath_as_py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import json
 
 db = SQLAlchemy()
 
@@ -64,7 +64,12 @@ class User(db.Model):
     def set_path(self):
         theme = Theme(self.theme)
         group = self.group
-        path = userpath_as_py[str(group)]
+
+        with open('userpath.json') as userpath_json:
+            userpath_load = json.load(userpath_json)
+            userpath_dumps = json.dumps(userpath_load)
+            userpath_py = json.loads(userpath_dumps)
+        path = userpath_py[str(group)]
 
         for point_id in range(len(path)):
             path[point_id]['theme'] = theme.true if path[point_id]['theme'] else theme.neg
