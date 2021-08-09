@@ -1,8 +1,7 @@
 from flask import Flask
-from userpath import group2path
+from userpath import userpath_as_py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from copy import deepcopy
 
 db = SQLAlchemy()
 
@@ -65,7 +64,7 @@ class User(db.Model):
     def set_path(self):
         theme = Theme(self.theme)
         group = self.group
-        path = deepcopy(group2path[group])
+        path = userpath_as_py[str(group)]
 
         for point_id in range(len(path)):
             path[point_id]['theme'] = theme.true if path[point_id]['theme'] else theme.neg

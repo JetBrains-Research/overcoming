@@ -1,3 +1,5 @@
+import json
+
 group2path = {
     0: [{"endpoint": "instruction", "theme": True},
         {"endpoint": "task", "task_num": 0, "theme": True},
@@ -38,3 +40,7 @@ group2path = {
         {"endpoint": "post", "theme": True}
         ],
 }
+
+userpath_as_json = json.dumps(group2path)
+userpath_as_py = json.loads(userpath_as_json)
+
