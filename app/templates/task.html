@@ -12,20 +12,22 @@
 
     <script src="{{url_for('static', filename='process_code.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.bootcss.com/ace/1.4.12/theme-monokai.js"></script>
+    <script src="https://cdn.bootcss.com/ace/1.4.12/theme-eclipse.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
-
 <body>
+<h1> {{ task_line1 }} </h1>
 <h2> {{ task_line2 }} </h2>
-<div id="editor" style="width: 500px; height: 150px">{{task_line1}}</div>
+<div id="editor" style="width: 700px; height: 150px"></div>
 <script>
 const editor = ace.edit("editor");
     {% if theme=='Dark' %}
-        editor.setTheme("ace/theme/monokai");
+        editor.setTheme("ace/theme/monokai", ()=>{});
     {%else%}
-        editor.setTheme("ace/theme/eclipse");
+        editor.setTheme("ace/theme/eclipse", ()=>{});
     {% endif %}
-    editor.session.setMode("ace/mode/python");
+editor.session.setMode("ace/mode/python");
 </script>
 <br>
 <input type="submit" name="next" value="Дальше" onclick="processCode(editor);">

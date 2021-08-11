@@ -1,8 +1,7 @@
 from flask import Flask
-from userpath import group2path
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
+import json
 
 db = SQLAlchemy()
 
@@ -45,23 +44,32 @@ class User(db.Model):
     time_hash = db.Column(db.String(128), unique=True)
     theme = db.Column(db.String(64), unique=False)
     reason = db.Column(db.String(500), index=True, unique=False)
+    how_helpful = db.Column(db.Integer, unique=False)
+    how_comfortable = db.Column(db.Integer, unique=False)
     answers = db.relationship('Answers', backref='user', lazy='dynamic')
 
-    def __init__(self, username, theme, reason, time):
+    def __init__(self, username, theme, reason, how_helpful, how_comfortable, time):
         self.username = username
         self.theme = theme
         self.reason = reason
         self.time = time
+        self.how_comfortable = how_comfortable
+        self.how_helpful = how_helpful
         self.time_hash = hash(time)
 
     def set_group(self, group_id):
-        # 0 - control, 1 - forget, 2 - change, 3 - forget+change
+        # 0 - control, 1 - change, 2 - forget+change
         self.group = group_id % 4 if (group_id % 4 >= 1) & (group_id % 4 < 4) else 0
 
     def set_path(self):
         theme = Theme(self.theme)
         group = self.group
-        path = group2path[group]
+
+        with open('userpath.json') as userpath_json:
+            userpath_load = json.load(userpath_json)
+            userpath_dumps = json.dumps(userpath_load)
+            userpath_py = json.loads(userpath_dumps)
+        path = userpath_py[str(group)]
 
         for point_id in range(len(path)):
             path[point_id]['theme'] = theme.true if path[point_id]['theme'] else theme.neg

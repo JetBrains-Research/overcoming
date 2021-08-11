@@ -23,5 +23,10 @@ input {
 }
 
 h2, p {
-    width: 700px;
+    width: 755px;
+}
+
+#timeLeft {
+    font-size: 12px;
+    font-style: italic;
 }

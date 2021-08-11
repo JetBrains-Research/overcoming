@@ -37,5 +37,12 @@ textarea {
 }
 
 h2, p {
-    width: 700px;
+    width: 750px;
 }
+
+#timeLeft {
+    font-size: 10px;
+    font-style: italic;
+}
+
+label { font-size: 14px; }
