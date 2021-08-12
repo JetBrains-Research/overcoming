@@ -3,3 +3,4 @@ venv/
 .idea
 /dump/
 app/database/
+/ calculations/.ipynb_checkpoints/
