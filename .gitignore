@@ -4,3 +4,4 @@ venv/
 /dump/
 app/database/
 /calculations/.ipynb_checkpoints/
+/.ipynb_checkpoints/
