@@ -1,10 +1,17 @@
 import json
+import os
 from datetime import datetime
 from flask import request, render_template, session, redirect, url_for, jsonify
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SubmitField, StringField, RadioField
 from wtforms.validators import DataRequired
 from models import create_app, db, User, Answers
+
+
+try:
+    os.makedirs("database")
+except FileExistsError:
+    pass
 
 app = create_app()
 app.app_context().push()
@@ -42,7 +49,8 @@ def user():
         username = request.form.get('username', False)
         theme = request.form.get('theme', False)
 
-        new_user = User(username=username, theme=theme, reason="", how_helpful="", how_comfortable="", time=datetime.now())
+        new_user = User(username=username, theme=theme, reason="",
+                        how_helpful="", how_comfortable="", time=datetime.now())
 
         user_row = User.query.count()
         name2group = {"control": 0, "change": 1, "all": 2}
