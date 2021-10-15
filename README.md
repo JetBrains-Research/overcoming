@@ -1,14 +1,14 @@
 # Overcoming the mental set effect in programming
 This is the code for an experiment that is held to find an ecologically valid tool to get rid of habitual code smells.  
-We adapted the Luchins' ([Luchins, 1942](https://psycnet.apa.org/record/2011-21639-001)) paradigm to see if induction of cognitive control and increased awareness, provided by task-irrelevand change and by cue to intentionally forget prior solutions, would help to overcome the mental set effect, in other words to use less habitual but more direct solutions in simle programing tasks.
+We adapted the Luchins' ([Luchins, 1942](https://psycnet.apa.org/record/2011-21639-001)) paradigm to see if induction of cognitive control and increased awareness would help to overcome the mental set effect. The increase is provided by task-irrelevand change and by intentional cue to forget prior solutions. In other words: how to use less habitual but more 'on point' solutions in simle programing tasks.
 
-We think that cognitove deiven development is an important direction of research and work, so we would like to concider this project as a contribution to the field.
+We think that cognitive driven development is an important direction of research and work, so we would like to consider this project as a contribution to the field.
 
 The project contains a Flask app to gather data and a Jupyter notebook to make calculations.
 
 ## Getting Started
-The app for an experiment is situated in the [«app» folder](../tree/calculation/app).<br/>
-Prerequisites might be found there in the [requirements.txt](../blob/calculation/app/requirements.txt).<br/>
+The app for an experiment is located in the [«app» folder](../tree/calculation/app).<br/>
+Prerequisites might be found here in the [requirements.txt](../blob/calculation/app/requirements.txt).<br/>
 `pip install -r requirements.txt`
 
 [app.py](../blob/calculation/app/app.py) is the main file which should be run to get access to a
@@ -23,7 +23,7 @@ The first page, **`index` route**, contains initial instructions.
 Next, the **`user` route** is presented. On the front end of this page, participant fills in their email and choose their habitual IDE theme. On the back end quite a few processes took place:
 1. All data from the form goes to the `User` model, along with its timestamp. The model might be found in the [models.py](../blob/calculation/app/models.py) file. 
 2. The timestamp is hashed and logged to the user model for further usage as a foreign key in another model.
-3. In the user model the group is assigned according to the preset «codenames» `name2group = {"control": 0, "change": 1, "all": 2}` for testing purposes, or according to the index of the newly-formed row.
+3. In the user model the group is assigned according the preset «codenames» `name2group = {"control": 0, "change": 1, "all": 2}` for testing purposes, or according to the index of the newly-formed row.
 4. We needed the theme to be changed from habitual to the opposite one in the second phase of the experiment. In order to do that we made a `Theme` class to transform the theme to boolean.
 
 ```python
@@ -43,7 +43,7 @@ class Theme:
     def neg(self):
         return self.themes[not self.theme_id]
 ```
-5. The order and characteristics of further page-presentation is set from the [userpath.json](../blob/calculation/app/userpath.json) file according to the assighned group and chosen theme. 
+5. The order and characteristics of further page-presentation is set from the [userpath.json](../blob/calculation/app/userpath.json) file according to the assigned group and chosen theme.
 ```python
 def set_path(self):
     theme = Theme(self.theme)
@@ -91,8 +91,12 @@ in the [over_cal.ipynb file](../blob/calculation/calculations/over_cal.ipynb).
 
 *We use this app online and our data is stored on the server, also we use data from a pre-experimental questionnaire,
 and so one always places myDB.db and prior.csv files to the «calculations» folder manually.
-Note that the prior.csv file should contain two columns: username and set.
-Where username is participant's email and set is the name(s) of function(s) which are habitually used by a participant.*
+Note that the prior.csv file should contain columns: 
+`username` with email, 
+`months` of expertise with Python, 
+`set` names with parenthesis and trough commas with no spaces, 
+`exp` where zero is for those who has no sets and one is for participants of the main part of the experiment, 
+`set_count` where the number of sets exposed by a participant is displayed.*
 
 ## Credits
 This project was made during a summer internship in [Machine Learning for 
