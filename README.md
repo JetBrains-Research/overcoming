@@ -98,4 +98,4 @@ Where username is participant's email and set is the name(s) of function(s) whic
 This project was made during a summer internship in [Machine Learning for 
 Software Engineering Research Group in JetBrains Research](https://research.jetbrains.org/groups/ml_methods/). <br/>
 Supervisor and contributor of this project is [Sergey Titov](https://github.com/TitovSergey). <br/>
-Author: [Agniya Serheyuk](https://github.com/hugnia), St. Petersburg State University.
+Author: [Agniya Serheyuk](https://github.com/hugnia)
